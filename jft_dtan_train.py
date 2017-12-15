@@ -6,9 +6,9 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import jiayu_inference
+from model import dtan
 
-GPU_NUM = "0"
+GPU_NUM = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 SIMPLE_NUM = 7
 LANDMARK_LENGTH = 68*2*SIMPLE_NUM
@@ -17,6 +17,7 @@ NUM_CLASSES = 6
 
 def placeholder_inputs():
     images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, SIMPLE_NUM])
+    # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
@@ -48,9 +49,9 @@ def read_and_decode(filename):
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [28672])
-    images = tf.reshape(images, [64, 64, SIMPLE_NUM])
-    landmark = tf.slice(img, [28672], [LANDMARK_LENGTH])
+    images = tf.slice(img, [0], [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM])
+    images = tf.reshape(images, [dtan.IMAGE_SIZE, dtan.IMAGE_SIZE, SIMPLE_NUM])
+    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return images, label
 
@@ -64,12 +65,12 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=25392
+                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [28672])
-    images = tf.reshape(images, [64, 64, SIMPLE_NUM])
-    landmark = tf.slice(img, [28672], [LANDMARK_LENGTH])
+    images = tf.slice(img, [0], [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM])
+    images = tf.reshape(images, [dtan.IMAGE_SIZE, dtan.IMAGE_SIZE, SIMPLE_NUM])
+    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return images, label
 
@@ -77,30 +78,30 @@ def read_and_decode_4_test(filename):
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
     with tf.Graph().as_default():
         # with tf.device('/gpu:'+GPU_NUM):
-        images, label = read_and_decode(train_tfrecord_path)
+        images, landmark, label = read_and_decode(train_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch, label_batch = tf.train.shuffle_batch([images, label], batch_size=train_batch_size, capacity=2000,
+        images_batch, label_batch = tf.train.shuffle_batch([images, landmark, label], batch_size=train_batch_size, capacity=2000,
                                                         min_after_dequeue=1000)
 
-        images_test, label_test = read_and_decode_4_test(test_tfrecord_path)
+        images_test, landmark_test, label_test = read_and_decode_4_test(test_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch_test, label_batch_test = tf.train.batch([images_test, label_test], batch_size=test_batch_size, capacity=2000)
+        images_batch_test, label_batch_test = tf.train.batch([images_test, landmark_test, label_test], batch_size=test_batch_size, capacity=2000)
 
         # Generate placeholders for the images and labels.
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = jiayu_inference.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = dtan.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
-        loss = jiayu_inference.loss(fe_logits, labels_placeholder)
+        loss = dtan.loss(fe_logits, labels_placeholder)
 
         # Add to the Graph the Ops that calculate and apply gradients.
         global_step = tf.Variable(0, trainable=False)
-        train_op = jiayu_inference.training(loss, flags.learning_rate, global_step)
+        train_op = dtan.training(loss, flags.learning_rate, global_step)
 
         # Add the Op to compare the logits to the labels during evaluation.
-        eval_correct = jiayu_inference.evaluation(fe_logits, labels_placeholder)
+        eval_correct = dtan.evaluation(fe_logits, labels_placeholder)
 
         # Build the summary Tensor based on the TF collection of Summaries.
         summary = tf.summary.merge_all()
@@ -116,8 +117,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries_graph_1213(3)/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries_graph_1213(3)/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries_graph_1225/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries_graph_1225/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
@@ -148,7 +149,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                 duration = time.time() - start_time
 
                 # Write the summaries and print an overview fairly often.
-                if step % 50 == 0 or (step + 1) == flags.max_steps:
+                if step % 100 == 0 or (step + 1) == flags.max_steps:
                     print('fold_num:{}'.format(fold_num))
                     print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
                     # Update the events file.
@@ -179,7 +180,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "./oulu_el_joint_new"  # "./oulu_mhi"
+    base_path = "./oulu_el_joint"
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -194,7 +195,7 @@ def main(_):
         test_tfrecord_path = os.path.join(test_train_dir, test_file)
         # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
         test_batch_size = 48
-        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
+        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=test_batch_size)
         train_correct.append(train)
         test_correct.append(test)
     print(np.array(train_correct).shape)
@@ -222,8 +223,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=5000,
-        help='max steps initial 5000.'
+        default=10000,
+        help='max steps initial 10000.'
 
     )
     flags, unparsed = parser.parse_known_args()

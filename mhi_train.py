@@ -1,11 +1,12 @@
-import os
-import tensorflow as tf
-import mhi
 import argparse
+import os
 import sys
 import time
-import numpy as np
 
+import numpy as np
+import tensorflow as tf
+
+from model import mhi
 
 GPU_NUM = "3"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
