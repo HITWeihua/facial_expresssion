@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from model import dtan
 
-GPU_NUM = "1"
+GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 SIMPLE_NUM = 7
 LANDMARK_LENGTH = 68*2*SIMPLE_NUM
@@ -78,14 +78,14 @@ def read_and_decode_4_test(filename):
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
     with tf.Graph().as_default():
         # with tf.device('/gpu:'+GPU_NUM):
-        images, landmark, label = read_and_decode(train_tfrecord_path)
+        images, label = read_and_decode(train_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch, label_batch = tf.train.shuffle_batch([images, landmark, label], batch_size=train_batch_size, capacity=2000,
+        images_batch, label_batch = tf.train.shuffle_batch([images, label], batch_size=train_batch_size, capacity=2000,
                                                         min_after_dequeue=1000)
 
-        images_test, landmark_test, label_test = read_and_decode_4_test(test_tfrecord_path)
+        images_test, label_test = read_and_decode_4_test(test_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch_test, label_batch_test = tf.train.batch([images_test, landmark_test, label_test], batch_size=test_batch_size, capacity=2000)
+        images_batch_test, label_batch_test = tf.train.batch([images_test, label_test], batch_size=test_batch_size, capacity=2000)
 
         # Generate placeholders for the images and labels.
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
@@ -117,8 +117,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries_graph_1225/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries_graph_1225/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1225/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1225/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
@@ -195,7 +195,7 @@ def main(_):
         test_tfrecord_path = os.path.join(test_train_dir, test_file)
         # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
         test_batch_size = 48
-        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=test_batch_size)
+        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
         train_correct.append(train)
         test_correct.append(test)
     print(np.array(train_correct).shape)
@@ -217,14 +217,14 @@ if __name__ == '__main__':
     parser.add_argument(
         '--train_batch_size',
         type=int,
-        default=60,
+        default=64,
         help='Batch size.  Must divide evenly into the dataset sizes.'
     )
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=10000,
-        help='max steps initial 10000.'
+        default=8000,
+        help='max steps initial 8000.'
 
     )
     flags, unparsed = parser.parse_known_args()
