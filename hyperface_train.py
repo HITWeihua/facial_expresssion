@@ -1,12 +1,12 @@
-import argparse
 import os
+import tensorflow as tf
+import hyperface
+import argparse
 import sys
 import time
-
 import numpy as np
-import tensorflow as tf
-
-from model import hyperface
+import dtan_lm_inference
+import dtan_lm_inference_simplier
 
 GPU_NUM = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
