@@ -1,9 +1,14 @@
-*.class
-
-# Package Files #
+#Data#
 oulu*/
+data*/
+*labels/
+*images/
+Landmarks/
 
+
+
+#Summaries#
 summaries*/
 
-
+#jetbrain_idea#
 .idea/
