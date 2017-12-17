@@ -5,6 +5,8 @@ data*/
 *images/
 Landmarks/
 test*/
+*.dat*
+*.tfrecords
 
 
 

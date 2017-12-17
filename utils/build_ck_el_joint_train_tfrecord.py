@@ -86,6 +86,7 @@ def write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, an
     lable_vec = [float(x) for x in lable_vec.tolist()]
     return express_raw
 
+
 def concat_and_write2file(images_vec, landmarks_vec, lable_vec):
     img_landmarks_raw = []
     img_landmarks_raw.extend(images_vec)
