@@ -188,7 +188,7 @@ def inference(images, keep_prob, is_train):
 
     # fc3 facial expression
     with tf.variable_scope('fc3_ep'):
-        weights = weight_variable([500, NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([512, NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc_1_drop, weights) + biases
 
