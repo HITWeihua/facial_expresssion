@@ -77,7 +77,7 @@ def variable_summaries(var):
 def inference(images, keep_prob, is_train):
     # conv1
     with tf.variable_scope('conv1'):
-        kernel = weight_variable([5, 5, SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
+        kernel = weight_variable([5, 5, SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel) + biases
         conv1_bn = batch_norm(conv1, 64, is_train)
@@ -91,7 +91,7 @@ def inference(images, keep_prob, is_train):
 
     # conv2
     with tf.variable_scope('conv2'):
-        kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv2 = conv2d(pool1, kernel) + biases
         conv2_bn = batch_norm(conv2, 64, is_train)
@@ -143,7 +143,7 @@ def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
                                     1000,
-                                    0.96,
+                                    0.3,  # 0.96
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)
