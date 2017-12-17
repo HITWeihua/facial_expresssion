@@ -6,7 +6,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import resnet_dtan
+from model import resnet_dtan_v2
 from model import dtan
 
 GPU_NUM = "0"
@@ -92,7 +92,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = resnet_dtan.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = resnet_dtan_v2.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = dtan.loss(fe_logits, labels_placeholder)

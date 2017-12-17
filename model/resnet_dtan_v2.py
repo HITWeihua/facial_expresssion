@@ -147,29 +147,50 @@ def inference(images, keep_prob, is_train):
     with tf.variable_scope('pool3'):
         pool3 = tf.nn.max_pool(add_layer3_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
+    with tf.variable_scope('block5'):
+        kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases7 = bias_variable([64], name='biases')
+        conv7 = conv2d(pool3, kernel7) + biases7
+        conv7_bn = batch_norm(conv7, 64, is_train)
+        conv7_activation = ACTIVATION(conv7_bn, name='activate')  # 64*64
+
+        kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases8 = bias_variable([64], name='biases')
+        conv8 = conv2d(conv7_activation, kernel8) + biases8
+
+        add_layer4 = tf.add(conv8, pool3)
+
+        add_layer4_bn = batch_norm(add_layer4, 64, is_train)
+        add_layer4_activation = ACTIVATION(add_layer4_bn, name='activate')  # 64*64
+        variable_summaries(add_layer4_activation)
+
+    # pool2
+    with tf.variable_scope('pool4'):
+        pool4 = tf.nn.max_pool(add_layer4_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
+
 
     # fc1
-    h_pool3_flat = tf.reshape(pool3, [-1, 8 * 8 * 64])
+    h_pool4_flat = tf.reshape(pool4, [-1, 4 * 4 * 64])
     with tf.variable_scope('fc1'):
-        weights = weight_variable([8 * 8 * 64, 500], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([500], name='biases')
-        fc_1 = tf.nn.relu(tf.matmul(h_pool3_flat, weights) + biases)
+        weights = weight_variable([4 * 4 * 64, 512], stddev=0.1, name='weights', wd=0.01)
+        biases = bias_variable([512], name='biases')
+        fc_1 = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
         variable_summaries(fc_1)
-        # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
+        fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
-    with tf.variable_scope('fc2'):
-        weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([500], name='biases')
-        fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        variable_summaries(fc_2)
-        fc2_drop = tf.nn.dropout(fc_2, keep_prob)
+    # with tf.variable_scope('fc2'):
+    #     weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
+    #     biases = bias_variable([500], name='biases')
+    #     fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
+    #     variable_summaries(fc_2)
+    #     fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
     with tf.variable_scope('fc3_ep'):
         weights = weight_variable([500, NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([NUM_CLASSES], name='biases')
-        fe_logits = tf.matmul(fc2_drop, weights) + biases
+        fe_logits = tf.matmul(fc_1_drop, weights) + biases
 
     return fe_logits
 
