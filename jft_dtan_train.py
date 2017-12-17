@@ -6,7 +6,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import resnet_dtan_v2
+from model import resnet_dtan_v3
 from model import dtan
 
 GPU_NUM = "0"
@@ -92,7 +92,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = resnet_dtan_v2.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = resnet_dtan_v3.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = dtan.loss(fe_logits, labels_placeholder)
@@ -114,12 +114,12 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.6)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1217(2)/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1217(2)/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1217(3)/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1217(3)/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
