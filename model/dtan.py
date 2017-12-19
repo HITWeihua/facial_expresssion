@@ -62,8 +62,8 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
-def variable_summaries(var):
-    with tf.name_scope('summaries'):
+def variable_summaries(var, name, is_conv=False):
+    with tf.name_scope(name + '/summaries'):
         mean = tf.reduce_mean(var)
         tf.summary.scalar('mean', mean)
         # with tf.name_scope('stddev'):
@@ -72,6 +72,8 @@ def variable_summaries(var):
             # tf.summary.scalar('max', tf.reduce_max(var))
             # tf.summary.scalar('min', tf.reduce_min(var))
         tf.summary.histogram('histogram', var)
+        if is_conv:
+            tf.summary.image('image', tf.reshape(var[:, :, :, 0], [-1, 64, 64, 1]))
 
 
 def inference(images, keep_prob, is_train):
@@ -84,7 +86,7 @@ def inference(images, keep_prob, is_train):
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
         # variable_summaries(conv1)
         # variable_summaries(conv1_bn)
-        variable_summaries(conv1_activation)
+        variable_summaries(conv1_activation, "conv1")
     # pool1
     with tf.variable_scope('pool1'):
         pool1 = max_pool_2x2(conv1_activation)  # 32*32
@@ -98,7 +100,7 @@ def inference(images, keep_prob, is_train):
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
         # variable_summaries(conv2)
         # variable_summaries(conv2_bn)
-        variable_summaries(conv2_activation)
+        variable_summaries(conv2_activation, "conv2")
 
     # pool2
     with tf.variable_scope('pool2'):
@@ -110,7 +112,7 @@ def inference(images, keep_prob, is_train):
         weights = weight_variable([16 * 16 * 64, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
-        variable_summaries(fc_1)
+        variable_summaries(fc_1, 'fc1')
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
@@ -118,7 +120,7 @@ def inference(images, keep_prob, is_train):
         weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        variable_summaries(fc_2)
+        variable_summaries(fc_2, 'fc2')
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
