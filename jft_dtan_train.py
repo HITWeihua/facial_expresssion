@@ -6,7 +6,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import resnet_dtan_v3
+from model import resnet_dtan
 from model import dtan
 
 GPU_NUM = "0"
@@ -92,7 +92,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = resnet_dtan_v3.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = resnet_dtan.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = dtan.loss(fe_logits, labels_placeholder)
@@ -114,12 +114,12 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.6)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.8)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1217(3)/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1217(3)/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1219/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1219/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
@@ -171,6 +171,11 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         last_train_correct.append(train_correct)
                         last_test_correct.append(test_correct)
                     if (step + 1) == flags.max_steps:
+                        fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
+                        np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
+                                   fe_logits_last_values)
+                        np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/test_l.txt',
+                                   l_test)
                         print(last_train_correct)
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
@@ -181,7 +186,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "./oulu_el_joint"
+    base_path = "./oulu_el_joint_new"
     train_correct = []
     test_correct = []
     for i in range(10):
