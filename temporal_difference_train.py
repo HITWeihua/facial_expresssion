@@ -9,7 +9,7 @@ import tensorflow as tf
 from model import temporal_difference as td_model
 
 
-GPU_NUM = "0"
+GPU_NUM = "2"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 SIMPLE_NUM = 7
 LANDMARK_LENGTH = 68*2*SIMPLE_NUM
@@ -20,7 +20,7 @@ def placeholder_inputs():
     # images_placeholders = []
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
-    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, 1])
+    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, SIMPLE_NUM])
     # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, NUM_CLASSES))
     keep_prob = tf.placeholder("float")

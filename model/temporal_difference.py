@@ -72,6 +72,7 @@ def variable_summaries(var):
 
 
 def block_top(image, is_train):
+    image = tf.reshape(image, [-1, 64, 64, 1])
     kernel1 = weight_variable([5, 5, 1, 16], stddev=0.1, name='weights', wd=0.0)
     biases1 = bias_variable([16], name='biases')
     conv1 = conv2d(image, kernel1) + biases1
@@ -79,7 +80,7 @@ def block_top(image, is_train):
     conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
 
     pool1 = max_pool_2x2(conv1_activation)  # 32*32
-    kernel2 = weight_variable([5, 5, 1, 16], stddev=0.1, name='weights', wd=0.0)
+    kernel2 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
     biases2 = bias_variable([16], name='biases')
     conv2 = conv2d(pool1, kernel2) + biases2
     conv2_bn = batch_norm(conv2, 16, is_train)
@@ -99,7 +100,7 @@ def inference(images, keep_prob, is_train):
                 old_frames_features = frames_features
             else:
                 frames_features = block_top(images[:, :, :, i], is_train)
-                inner_features_concat = tf.concat(inner_features_concat, frames_features - old_frames_features)
+                inner_features_concat = tf.concat([inner_features_concat, frames_features - old_frames_features], axis=-1)
                 old_frames_features = frames_features
 
     with tf.variable_scope('block1'):
@@ -173,29 +174,29 @@ def inference(images, keep_prob, is_train):
     with tf.variable_scope('pool3'):
         pool3 = tf.nn.max_pool(add_layer3_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 8*8
 
-    with tf.variable_scope('block5'):
-        kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases7 = bias_variable([64], name='biases')
-        conv7 = conv2d(pool3, kernel7) + biases7
-        conv7_bn = batch_norm(conv7, 64, is_train)
-        conv7_activation = ACTIVATION(conv7_bn, name='activate')  # 8*8
-
-        kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases8 = bias_variable([64], name='biases')
-        conv8 = conv2d(conv7_activation, kernel8) + biases8
-
-        add_layer4 = tf.add(conv8, pool3)
-
-        add_layer4_bn = batch_norm(add_layer4, 64, is_train)
-        add_layer4_activation = ACTIVATION(add_layer4_bn, name='activate')  # 8*8
-        variable_summaries(add_layer4_activation)
-
-    # pool2
-    with tf.variable_scope('pool4'):
-        pool4 = tf.nn.max_pool(add_layer4_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 4*4
+    # with tf.variable_scope('block5'):
+    #     kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+    #     biases7 = bias_variable([64], name='biases')
+    #     conv7 = conv2d(pool3, kernel7) + biases7
+    #     conv7_bn = batch_norm(conv7, 64, is_train)
+    #     conv7_activation = ACTIVATION(conv7_bn, name='activate')  # 8*8
+    #
+    #     kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+    #     biases8 = bias_variable([64], name='biases')
+    #     conv8 = conv2d(conv7_activation, kernel8) + biases8
+    #
+    #     add_layer4 = tf.add(conv8, pool3)
+    #
+    #     add_layer4_bn = batch_norm(add_layer4, 64, is_train)
+    #     add_layer4_activation = ACTIVATION(add_layer4_bn, name='activate')  # 8*8
+    #     variable_summaries(add_layer4_activation)
+    #
+    # # pool2
+    # with tf.variable_scope('pool4'):
+    #     pool4 = tf.nn.max_pool(add_layer4_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 4*4
 
     # fc1
-    h_pool4_flat = tf.reshape(pool4, [-1, 4 * 4 * 64])
+    h_pool4_flat = tf.reshape(pool3, [-1, 4 * 4 * 64])
     with tf.variable_scope('fc1'):
        weights = weight_variable([4 * 4 * 64, 512], stddev=0.1, name='weights', wd=0.01)
        biases = bias_variable([512], name='biases')
