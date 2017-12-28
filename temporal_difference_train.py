@@ -6,10 +6,10 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import temporal_difference as td_model
+from model import temporal_difference_v0 as td_model
+# from model import single_frame as td_model
 
-
-GPU_NUM = "2"
+GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 SIMPLE_NUM = 7
 LANDMARK_LENGTH = 68*2*SIMPLE_NUM
@@ -121,8 +121,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1225/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1225/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
