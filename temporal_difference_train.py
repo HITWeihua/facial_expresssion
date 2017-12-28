@@ -6,7 +6,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import temporal_difference_v0 as td_model
+from model import temporal_difference_v0_pool as td_model
+from model import images_difference as id_model
 # from model import single_frame as td_model
 
 GPU_NUM = "0"
@@ -95,7 +96,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = td_model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = id_model.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = td_model.loss(fe_logits, labels_placeholder)
@@ -121,8 +122,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228(3)/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228(3)/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
