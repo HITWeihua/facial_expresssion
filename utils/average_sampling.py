@@ -6,11 +6,13 @@ import os
 import cv2
 import shutil
 
-base_read_path = "../oulu/oulu_face_landmark"
-base_write_path = "../oulu_sampling"
+# base_read_path = "../oulu/oulu_face_landmark"
+# base_write_path = "../oulu_sampling"
+base_read_path = os.path.abspath('F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_image_landmark')
+base_write_path = os.path.abspath('F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_sampling')
 
 people_list = [x for x in os.listdir(base_read_path) if '.DS' not in x]
-sampling_number = 7
+sampling_number = 6
 
 for people in people_list:
     people_read_path = os.path.join(base_read_path, people)
@@ -25,7 +27,7 @@ for people in people_list:
         exp_write_path = os.path.join(people_write_path, exp_dir)
         if not os.path.isdir(exp_write_path):
             os.mkdir(exp_write_path)
-        photo_list = [x for x in os.listdir(exp_read_path) if '.jpeg' in x]
+        photo_list = [x for x in os.listdir(exp_read_path) if '.png' in x]
 
         photo_list_sampling = []
         gap_num = (len(photo_list)-2)//(sampling_number-2)
@@ -40,7 +42,7 @@ for people in people_list:
             photo_write = os.path.join(exp_write_path, photo)
             shutil.copy(photo_read, photo_write)
 
-            landmarks = photo.replace('.jpeg', '.txt')
+            landmarks = photo.replace('.png', '.txt')
             landmarks_read = os.path.join(exp_read_path, landmarks)
             landmarks_write = os.path.join(exp_write_path, landmarks)
             shutil.copy(landmarks_read, landmarks_write)

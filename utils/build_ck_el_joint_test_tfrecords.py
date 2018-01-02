@@ -72,7 +72,7 @@ def write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, an
     for image_name in image_names:
         image_path = os.path.join(image_names_path, image_name)
         img = Image.open(image_path)
-        img = img.convert("L")
+        # img = img.convert("L")
         if is_flipped:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
         if angle!=0:
@@ -92,7 +92,7 @@ def write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, an
 def concat_and_write2file(images_vec, landmarks_vec, lable_vec):
     img_landmarks_raw = []
     img_landmarks_raw.extend(images_vec)
-    img_landmarks_raw.extend(landmarks_vec)
+    img_landmarks_raw.extend(landmarks_vec)  # 64*64*6+68*2*6=25392
     assert len(img_landmarks_raw) == 25392, "length not equal. img_landmarks_raw: {}".format(len(img_landmarks_raw))
     example = tf.train.Example(features=tf.train.Features(feature={
         "label": tf.train.Feature(float_list=tf.train.FloatList(value=lable_vec)),
@@ -102,8 +102,8 @@ def concat_and_write2file(images_vec, landmarks_vec, lable_vec):
 
 
 
-image_base_path = "./cohn-kanade-images_sampling/"
-lable_base_path = "F:\\files\\joint_fine_tuning\\Emotion_labels\\Emotion"
+image_base_path = "F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_sampling"
+lable_base_path = "F:\\files\\facial_expresssion\\ck\\Emotion_labels\\Emotion"
 # landmarks_base_path = "F:\\files\\joint_fine_tuning\\Landmarks\\Landmarks"
 
 
@@ -117,9 +117,9 @@ if __name__ == '__main__':
         total_samples = 0
         start_time = time.time()
 
-        writer = tf.python_io.TFRecordWriter("./ck_joint/{}/ck_joint_test_{}.tfrecords".format(str(tf_num), str(tf_num)))  # 要生成的文件
+        writer = tf.python_io.TFRecordWriter("F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_el_joint\\{}\\oulu_joint_test_{}.tfrecords".format(str(tf_num), str(tf_num)))  # 要生成的文件
 
-        with open("./data_pairs/landmark/{}/test_subjects.txt".format(str(tf_num)), 'r') as f:
+        with open("../data_pairs_old/landmark/{}/test_subjects.txt".format(str(tf_num)), 'r') as f:
             subject_list = f.readlines()
         people_list = [x.strip() for x in subject_list if '.DS' not in x]
 
@@ -159,7 +159,7 @@ if __name__ == '__main__':
                     # landmark_names = average_sampling(landmark_names)
                     # angles = [-15, -10, -5, 0, 5, 10, 15]
                     # for angle in angles:
-                    assert len(landmark_names)+len(image_names) == 12, "files number not equal to 12. files: {}".format(image_names_path)
+                    assert len(landmark_names)+len(image_names) == 12, "files number not equal to 14. files: {}".format(image_names_path)
                     landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False, add_noise=False, rotation=0)
                     images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0)
                     concat_and_write2file(images_vec, landmarks_vec, lable_vec)

@@ -16,9 +16,11 @@ num = 0
 spliter = re.compile(r'[\(\)\,\n]+')
 # win = dlib.image_window()
 
-base_read_path = os.path.abspath('../oulu/Strong')
-base_write_path = os.path.abspath('../oulu/oulu_face_landmark')
-person_list = os.listdir(base_read_path)
+# base_read_path = os.path.abspath('../oulu/Strong')
+# base_write_path = os.path.abspath('../oulu/oulu_face_landmark')
+base_read_path = os.path.abspath('F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\cohn-kanade-images')
+base_write_path = os.path.abspath('F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_image_landmark')
+person_list = [i for i in os.listdir(base_read_path) if '.DS' not in i]  # and int(i[1:])>138]
 error_path = []
 
 for person in person_list:
@@ -27,11 +29,11 @@ for person in person_list:
     if not os.path.isdir(write_path):
         os.mkdir(write_path)
 
-    expression_list = os.listdir(read_path)
+    expression_list = [i for i in os.listdir(read_path) if '.DS' not in i]
     for exp in expression_list:
         read_exp_path = os.path.join(read_path, exp)
         write_exp_path = os.path.join(write_path, exp)
-        files = [f for f in os.listdir(read_exp_path) if '.jpeg' in f]
+        files = [f for f in os.listdir(read_exp_path) if '.png' in f]
         if not os.path.isdir(write_exp_path):
             os.mkdir(write_exp_path)
         face_crop = []
@@ -69,22 +71,36 @@ for person in person_list:
                     left = int(np.min(landmarks[:, 0]))
 
                     # img_crop = img[d.top():d.bottom(), d.left():d.right(), :]
-                    img_crop = img[top:bottom, left:right, :]
+
+                    # RGB
+                    if len(img.shape) == 3:
+                        img_crop = img[top:bottom, left:right, :]
+                    # gray
+                    else:
+                        img_crop = img[top:bottom, left:right]
                     face_crop.append(top)
                     face_crop.append(bottom)
                     face_crop.append(left)
                     face_crop.append(right)
                 else:
-                    img_crop = img[face_crop[0]:face_crop[1], face_crop[2]:face_crop[3], :]
+                    # RGB
+                    if len(img.shape) == 3:
+                        img_crop = img[face_crop[0]:face_crop[1], face_crop[2]:face_crop[3], :]
+                    # gray
+                    else:
+                        img_crop = img[face_crop[0]:face_crop[1], face_crop[2]:face_crop[3]]
 
                 # resize the image to 64*64 and change color from rgb to gray
                 img_resized = resize(img_crop, (64, 64), mode='reflect')
-                img_gray = rgb2gray(img_resized)
+                if len(img_resized.shape) == 3:
+                    img_gray = rgb2gray(img_resized)
+                else:
+                    img_gray = img_resized
 
 
                 # generate 68 tuple landmarks
                 # shape = predictor(img_resized, d)
-                with open(write_f_path.replace('.jpeg', '.txt'), 'w') as fi:
+                with open(write_f_path.replace('.png', '.txt'), 'w') as fi:
                     for i in range(shape.num_parts):
                         fi.write(str(shape.part(i)) + '\n')
                 num += 1

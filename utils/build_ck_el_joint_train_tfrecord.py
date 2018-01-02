@@ -70,7 +70,7 @@ def write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, an
     for image_name in image_names:
         image_path = os.path.join(image_names_path, image_name)
         img = Image.open(image_path)
-        img = img.convert("L")
+        # img = img.convert("L")
         if is_flipped:
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
         if angle != 0:
@@ -101,8 +101,10 @@ def concat_and_write2file(images_vec, landmarks_vec, lable_vec):
 
 
 # landmarks_base_path = "F:\\files\\joint_fine_tuning\\Landmarks\\Landmarks"
-image_base_path = "./cohn-kanade-images_sampling/"
-lable_base_path = "F:\\files\\joint_fine_tuning\\Emotion_labels\\Emotion"
+# image_base_path = "./cohn-kanade-images_sampling/"
+# lable_base_path = "F:\\files\\joint_fine_tuning\\Emotion_labels\\Emotion"
+image_base_path = "F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_sampling"
+lable_base_path = "F:\\files\\facial_expresssion\\ck\\Emotion_labels\\Emotion"
 
 
 
@@ -115,9 +117,9 @@ if __name__ == '__main__':
     for tf_num in range(10):
         start_time = time.time()
         total_samples = 0
-        writer = tf.python_io.TFRecordWriter("./ck_joint/{}/ck_joint_train_{}.tfrecords".format(str(tf_num), str(tf_num)))  # 要生成的文件
+        writer = tf.python_io.TFRecordWriter("F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_el_joint\\{}\\oulu_joint_train_{}.tfrecords".format(str(tf_num), str(tf_num)))  # 要生成的文件
 
-        with open("./data_pairs/landmark/{}/train_subjects.txt".format(str(tf_num)), 'r') as f:
+        with open("../data_pairs_old/landmark/{}/train_subjects.txt".format(str(tf_num)), 'r') as f:
             subject_list = f.readlines()
         people_list = [x.strip() for x in subject_list if '.DS' not in x]
 
@@ -168,7 +170,7 @@ if __name__ == '__main__':
 
 
                     total_samples += 14
-                    # print(total_samples)
+                    print(total_samples)
 
         print(total_samples)
         print("real cost {}'s".format(time.time() - start_time))
