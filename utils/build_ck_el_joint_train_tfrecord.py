@@ -22,6 +22,7 @@ def rotaiton_coordinate(landmarks, rotation):
     #     i = (float(a[0]), float(a[1]))
     return landmarks
 
+
 def average_sampling(landmark_names):
     landmarks_list_sampling = []
     gap_num = (len(landmark_names) - 2) // (sampling_number - 2)
