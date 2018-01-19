@@ -125,7 +125,7 @@ def inference(images, keep_prob, is_train):
         add_layer1 = tf.add(conv3, conv1_activation)
 
         add_layer1_bn = batch_norm(add_layer1, 64, is_train)
-        add_layer1_activation = ACTIVATION(add_layer1_bn, name='activate')  # 64*64
+        add_layer1_activation = ACTIVATION(add_layer1_bn, name='activate2')  # 64*64
         variable_summaries(add_layer1_activation)
 
     # pool1
@@ -147,7 +147,7 @@ def inference(images, keep_prob, is_train):
         add_layer2 = tf.add(conv5, pool1)
 
         add_layer2_bn = batch_norm(add_layer2, 64, is_train)
-        add_layer2_activation = ACTIVATION(add_layer2_bn, name='activate')  # 32*32
+        add_layer2_activation = ACTIVATION(add_layer2_bn, name='activate2')  # 32*32
         variable_summaries(add_layer2_activation)
 
     # pool2
@@ -168,7 +168,7 @@ def inference(images, keep_prob, is_train):
         add_layer3 = tf.add(conv7, pool2)
 
         add_layer3_bn = batch_norm(add_layer3, 64, is_train)
-        add_layer3_activation = ACTIVATION(add_layer3_bn, name='activate')  # 16*16
+        add_layer3_activation = ACTIVATION(add_layer3_bn, name='activate2')  # 16*16
         variable_summaries(add_layer3_activation)
 
     # pool2
@@ -189,7 +189,7 @@ def inference(images, keep_prob, is_train):
         add_layer4 = tf.add(conv8, pool3)
 
         add_layer4_bn = batch_norm(add_layer4, 64, is_train)
-        add_layer4_activation = ACTIVATION(add_layer4_bn, name='activate')  # 8*8
+        add_layer4_activation = ACTIVATION(add_layer4_bn, name='activate2')  # 8*8
         variable_summaries(add_layer4_activation)
 
     # pool2
