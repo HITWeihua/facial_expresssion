@@ -6,15 +6,15 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from model import temporal_difference_v0_pool as td_model
-from model import images_difference as id_model
+from model import temporal_difference_v0 as td_model
+# from model import images_difference as id_model
 # from model import single_frame as td_model
 
-GPU_NUM = "0"
+GPU_NUM = "3"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
-SIMPLE_NUM = 7
+SIMPLE_NUM = 6
 LANDMARK_LENGTH = 68*2*SIMPLE_NUM
-NUM_CLASSES = 6
+NUM_CLASSES = 8
 
 
 def placeholder_inputs():
@@ -51,7 +51,7 @@ def read_and_decode(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
+                                           'img_landmarks_raw': tf.FixedLenFeature([25392], tf.float32),
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [td_model.IMAGE_PIXELS*td_model.SIMPLE_NUM])
@@ -70,7 +70,7 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
+                                           'img_landmarks_raw': tf.FixedLenFeature([25392], tf.float32),  # 24576+816=29624
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [td_model.IMAGE_PIXELS*td_model.SIMPLE_NUM])
@@ -96,7 +96,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = id_model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = td_model.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = td_model.loss(fe_logits, labels_placeholder)
@@ -118,12 +118,12 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228(3)/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_1228(3)/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_0102/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_0102/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
@@ -190,7 +190,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "./oulu_el_joint_new"
+    base_path = "./ck_el_joint_new"
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -203,8 +203,8 @@ def main(_):
                 train_file = file_name
         train_tfrecord_path = os.path.join(test_train_dir, train_file)
         test_tfrecord_path = os.path.join(test_train_dir, test_file)
-        # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
-        test_batch_size = 48
+        test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
+        # test_batch_size = 48
         train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
         train_correct.append(train)
         test_correct.append(test)

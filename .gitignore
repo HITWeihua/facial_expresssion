@@ -8,8 +8,7 @@ test*/
 *.dat*
 *.tfrecords
 graph/
-ck/
-
+ck*/
 
 
 #Summaries#

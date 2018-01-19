@@ -2,8 +2,8 @@ import tensorflow as tf
 
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
-NUM_CLASSES = 6
-SIMPLE_NUM = 7
+NUM_CLASSES = 8
+SIMPLE_NUM = 6
 LANDMARKS_LENGTH = 68*2*SIMPLE_NUM
 ACTIVATION = tf.nn.relu
 
@@ -104,7 +104,7 @@ def inference(images, keep_prob, is_train):
                 old_frames_features = frames_features
 
     with tf.variable_scope('block1'):
-        kernel1 = weight_variable([5, 5, 96, 64], stddev=0.1, name='weights', wd=0.0)
+        kernel1 = weight_variable([5, 5, 80, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
         conv1 = conv2d(inner_features_concat, kernel1) + biases1
         conv1_bn = batch_norm(conv1, 64, is_train)
