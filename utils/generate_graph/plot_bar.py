@@ -9,8 +9,8 @@ X = np.arange(n)+1
 Y1 = [ 0.6875      ,0.72083342  ,0.67083335 , 0.90833342 , 0.70416671 , 0.81666672 ,0.78750002 , 0.72916675 , 0.81250012 , 0.77083337]
 Y2 = [ 0.76666671 , 0.7458334 ,  0.74583334 , 0.86666667 , 0.64583337 , 0.8708334 ,0.85833329 , 0.73333335 , 0.8416667   ,0.84583342]
 # Y3 = [ 0.71249998, 0.76458335, 0.66874999, 0.78750002, 0.59583342, 0.64791667, 0.76041669, 0.70000005, 0.68958336, 0.70416671]
-plt.bar(X-0.15, Y1, width=0.3, facecolor='sandybrown', edgecolor='white', label='baseline:average=0.76')
-plt.bar(X+0.15, Y2, width=0.3, facecolor='darksalmon', edgecolor='white', label='our network:average=0.79')
+plt.bar(X-0.15, Y1, width=0.3, facecolor='sandybrown', edgecolor='white', label='baseline:average=0.74')
+plt.bar(X+0.15, Y2, width=0.3, facecolor='darksalmon', edgecolor='white', label='our network:average=0.77')
 # plt.bar(X+0.3, Y3, width=0.3, facecolor='tan', edgecolor='white', label='(5:5):average=0.7031')
 #width:柱的宽度
 # plt.bar(X+0.35,Y2,width = 0.35,facecolor = 'yellowgreen',edgecolor = 'white')
@@ -30,9 +30,9 @@ for x, y in zip(X,Y2):
 # for x, y in zip(X,Y3):
 #     plt.text(x+0.3, y, str(round(y, 2)), ha='center', va= 'bottom')
 # plt.ylim(0,+1.25)
-plt.title('结果对比', fontsize=25)
-plt.ylabel('准确率', fontsize=20)
-plt.xlabel('数据集', fontsize=20)
+plt.title('Result Compare', fontsize=25)
+plt.ylabel('accuracy', fontsize=20)
+plt.xlabel('fold number', fontsize=20)
 plt.legend(loc=4, fontsize=20, shadow=True)
-plt.savefig('F:\\files\\facial_expresssion\\graph\\test.jpg', dpi=300, bbox_inches='tight')
+plt.savefig('F:\\files\\facial_expresssion\\graph\\test2.jpg', dpi=300, bbox_inches='tight')
 plt.show()
