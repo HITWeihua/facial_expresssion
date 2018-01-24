@@ -2,9 +2,13 @@ import tensorflow as tf
 
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
-NUM_CLASSES = 8
-SIMPLE_NUM = 6
-LANDMARKS_LENGTH = 68*2*SIMPLE_NUM
+CK_NUM_CLASSES = 8
+CK_SIMPLE_NUM = 6
+CK_LANDMARKS_LENGTH = 68*2*CK_SIMPLE_NUM
+
+OULU_NUM_CLASSES = 6
+OULU_SIMPLE_NUM = 7
+OULU_LANDMARKS_LENGTH = 68*2*OULU_SIMPLE_NUM
 ACTIVATION = tf.nn.relu
 
 
@@ -41,8 +45,8 @@ def batch_norm(x, n_out, is_train):
 
 
 def weight_variable(shape, stddev, name, wd):
-    initial = tf.truncated_normal(shape, stddev=stddev, name=name)
-    var = tf.get_variable(name, shape, initializer=initial)
+    # initial = tf.truncated_normal(stddev=stddev)
+    var = tf.get_variable(name, shape, initializer=tf.truncated_normal_initializer(stddev=stddev))
     # var = tf.Variable(initial)
     if wd:
         weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
@@ -51,8 +55,8 @@ def weight_variable(shape, stddev, name, wd):
 
 
 def bias_variable(shape, name):
-    initial = tf.constant(0.1, shape=shape)
-    return tf.get_variable(name, shape, initializer=initial)
+    # initial = tf.constant(0.1)
+    return tf.get_variable(name, shape, initializer=tf.constant_initializer(0.1))
 
 
 def conv2d(x, W):
@@ -73,12 +77,12 @@ def variable_summaries(var):
 
 
 def block_top(image, is_train):
+
     image = tf.reshape(image, [-1, 64, 64, 1])
     kernel1 = weight_variable([5, 5, 1, 16], stddev=0.1, name='weights', wd=0.0)
     biases1 = bias_variable([16], name='biases')
     conv1 = conv2d(image, kernel1) + biases1
-    conv1_bn = batch_norm(conv1, 16, is_train)
-    conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
+
 
     # pool1 = max_pool_2x2(conv1_activation)  # 32*32
     # kernel2 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
@@ -86,26 +90,39 @@ def block_top(image, is_train):
     # conv2 = conv2d(pool1, kernel2) + biases2
     # conv2_bn = batch_norm(conv2, 16, is_train)
     # conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 32*32
-    return conv1_activation
+    return conv1
 
 
 def inference(images, keep_prob, is_train):
-    with tf.variable_scope('block_top', reuse=True):
-        for i in range(SIMPLE_NUM):
-            if i == 0:
-                frames_features = block_top(images[:, :, :, i], is_train)
-                old_frames_features = frames_features
-            elif i == 1:
-                frames_features = block_top(images[:, :, :, i], is_train)
-                inner_features_concat = frames_features - old_frames_features
-                old_frames_features = frames_features
-            else:
-                frames_features = block_top(images[:, :, :, i], is_train)
-                inner_features_concat = tf.concat([inner_features_concat, frames_features - old_frames_features], axis=-1)
-                old_frames_features = frames_features
+    for i in range(OULU_SIMPLE_NUM):
+        if i == 0:
+            with tf.variable_scope('block_top_conv') as scope:
+                conv_features = block_top(images[:, :, :, i], is_train)
+                # scope.reuse_variables()
+            conv_bn = batch_norm(conv_features, 16, is_train)
+            frames_features = ACTIVATION(conv_bn, name='activate')  # 64*64
+
+            old_frames_features = frames_features
+
+        elif i == 1:
+            with tf.variable_scope(scope, reuse=True):
+                conv_features = block_top(images[:, :, :, i], is_train)
+            conv_bn = batch_norm(conv_features, 16, is_train)
+            frames_features = ACTIVATION(conv_bn, name='activate')  # 64*64
+
+            inner_features_concat = frames_features - old_frames_features
+            old_frames_features = frames_features
+        else:
+            with tf.variable_scope(scope, reuse=True):
+                conv_features = block_top(images[:, :, :, i], is_train)
+            conv_bn = batch_norm(conv_features, 16, is_train)
+            frames_features = ACTIVATION(conv_bn, name='activate')  # 64*64
+
+            inner_features_concat = tf.concat([inner_features_concat, frames_features - old_frames_features], axis=-1)
+            old_frames_features = frames_features
 
     with tf.variable_scope('block1'):
-        kernel1 = weight_variable([5, 5, 80, 64], stddev=0.1, name='weights', wd=0.0)
+        kernel1 = weight_variable([5, 5, 96, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
         conv1 = conv2d(inner_features_concat, kernel1) + biases1
         conv1_bn = batch_norm(conv1, 64, is_train)
@@ -182,8 +199,8 @@ def inference(images, keep_prob, is_train):
         conv7_bn = batch_norm(conv7, 64, is_train)
         conv7_activation = ACTIVATION(conv7_bn, name='activate')  # 8*8
 
-        kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases8 = bias_variable([64], name='biases')
+        kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights2', wd=0.0)
+        biases8 = bias_variable([64], name='biases2')
         conv8 = conv2d(conv7_activation, kernel8) + biases8
 
         add_layer4 = tf.add(conv8, pool3)
@@ -207,8 +224,8 @@ def inference(images, keep_prob, is_train):
 
     # fc3 facial expression
     with tf.variable_scope('fc3_ep'):
-        weights = weight_variable([512, NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([NUM_CLASSES], name='biases')
+        weights = weight_variable([512, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+        biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc_1_drop, weights) + biases
 
     return fe_logits
