@@ -9,6 +9,8 @@ test*/
 *.tfrecords
 graph/
 ck*/
+*dat*
+nis*/
 
 
 #Summaries#
