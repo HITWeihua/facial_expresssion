@@ -88,15 +88,15 @@ def inference(images, keep_prob, is_train):
         biases = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel) + biases
 
-        images_tp = tf.transpose(images, perm=[0, 1, 3, 2])
+        # images_tp = tf.transpose(images, perm=[0, 1, 3, 2])
+        #
+        # kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
+        # biases2 = bias_variable([64], name='biases')
+        # conv12 = conv2d(images_tp, kernel2) + biases2
+        #
+        # add_layer1 = tf.add(conv1, tf.transpose(conv12, perm=[0, 1, 3, 2]))
 
-        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
-        biases2 = bias_variable([64], name='biases')
-        conv12 = conv2d(images_tp, kernel2) + biases2
-
-        add_layer1 = tf.add(conv1, tf.transpose(conv12, perm=[0, 1, 3, 2]))
-
-        conv1_bn = batch_norm(add_layer1, 64, is_train)
+        conv1_bn = batch_norm(conv1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
         # variable_summaries(conv1)
         # variable_summaries(conv1_bn)
