@@ -95,7 +95,6 @@ def inference(images, keep_prob, is_train):
         # conv12 = conv2d(images_tp, kernel2) + biases2
         #
         # add_layer1 = tf.add(conv1, tf.transpose(conv12, perm=[0, 1, 3, 2]))
-
         conv1_bn = batch_norm(conv1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
         # variable_summaries(conv1)
