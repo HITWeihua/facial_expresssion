@@ -6,14 +6,14 @@ import time
 import numpy as np
 import tensorflow as tf
 
-#from model import temporal_difference_v0 as td_model
-from model import temporal_difference_sw as td_model
+from model import temporal_difference_v0 as td_model
+# from model import temporal_difference_sw as td_model
 
 
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
-GPU_NUM = "3"
+GPU_NUM = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 # SIMPLE_NUM = 6
 # LANDMARK_LENGTH = 68*2*SIMPLE_NUM
@@ -121,12 +121,12 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.62)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.45)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_0120/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_0120/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries/summaries_graph_0402/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries/summaries_graph_0402/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
