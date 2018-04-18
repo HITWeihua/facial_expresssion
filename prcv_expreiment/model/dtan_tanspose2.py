@@ -89,7 +89,7 @@ def inference(images, keep_prob, is_train):
         conv1 = conv2d(images, kernel) + biases
         conv1_tp = tf.transpose(conv1, perm=[0, 1, 3, 2])
 
-        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
+        kernel2 = weight_variable([1, 3, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases2 = bias_variable([64], name='biases')
         conv12 = conv2d(conv1, kernel2) + biases2
 
@@ -105,39 +105,37 @@ def inference(images, keep_prob, is_train):
         # variable_summaries(conv1)
         # variable_summaries(conv1_bn)
 
-        variable_summaries(conv1_activation, "conv1")
-    # pool1
-    with tf.variable_scope('pool1'):
-        pool1 = max_pool_2x2(conv1_activation)  # 32*32
-
     # conv2
     with tf.variable_scope('conv2'):
         kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
-        conv2 = conv2d(pool1, kernel) + biases
+        conv2 = conv2d(conv1_activation, kernel) + biases
+        conv2_tp = tf.transpose(conv2, perm=[0, 1, 3, 2])
 
-        pool1_tp = tf.transpose(pool1, perm=[0, 1, 3, 2])
+        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
+        biases2 = bias_variable([64], name='biases')
+        conv22 = conv2d(conv2, kernel2) + biases2
 
-        kernel2 = weight_variable([5, 5, 32, 32], stddev=0.1, name='weights', wd=0.01)
-        biases2 = bias_variable([32], name='biases')
-        conv22 = conv2d(pool1_tp, kernel2) + biases2
+        kernel3 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
+        biases3 = bias_variable([64], name='biases')
+        conv23 = conv2d(conv2_tp, kernel3) + biases3
 
-        add_layer2 = tf.add(conv2, tf.transpose(conv22, perm=[0, 1, 3, 2]))
+        add_layer2 = tf.add(conv22, tf.transpose(conv23, perm=[0, 1, 3, 2]))
 
         conv2_bn = batch_norm(add_layer2, 64, is_train)
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
         # variable_summaries(conv2)
         # variable_summaries(conv2_bn)
-        variable_summaries(conv2_activation, "conv2")
+        # variable_summaries(conv2_activation, "conv2")
 
     # pool2
     with tf.variable_scope('pool2'):
         pool2 = tf.nn.max_pool(conv2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
     # fc1
-    h_pool2_flat = tf.reshape(pool2, [-1, 16 * 16 * 64])
+    h_pool2_flat = tf.reshape(pool2, [-1, 32 * 32 * 64])
     with tf.variable_scope('fc1'):
-        weights = weight_variable([16 * 16 * 64, 500], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([32 * 32 * 64, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
         variable_summaries(fc_1, 'fc1')
