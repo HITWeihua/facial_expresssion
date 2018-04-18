@@ -94,7 +94,7 @@ def inference(images, keep_prob, is_train):
         biases2 = bias_variable([64], name='biases')
         conv12 = conv2d(images_tp, kernel2) + biases2
 
-        add_layer1 = tf.add(conv1, conv12)
+        add_layer1 = tf.add(conv1, tf.transpose(conv12, perm=[0, 1, 3, 2]))
 
         conv1_bn = batch_norm(add_layer1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
@@ -118,7 +118,7 @@ def inference(images, keep_prob, is_train):
         biases2 = bias_variable([64], name='biases')
         conv22 = conv2d(pool1_tp, kernel2) + biases2
 
-        add_layer2 = tf.add(conv2, conv22)
+        add_layer2 = tf.add(conv2, tf.transpose(conv22, perm=[0, 1, 3, 2]))
 
         conv2_bn = batch_norm(add_layer2, 64, is_train)
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
