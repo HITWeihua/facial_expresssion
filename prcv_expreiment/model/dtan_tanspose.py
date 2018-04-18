@@ -81,16 +81,26 @@ def variable_summaries(var, name, is_conv=False):
             tf.summary.image('image', tf.reshape(var[:, :, :, 0], [-1, 64, 64, 1]))
 
 
-def inference(images, images_tp, keep_prob, is_train):
+def inference(images, keep_prob, is_train):
     # conv1
     with tf.variable_scope('conv1'):
         kernel = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel) + biases
-        conv1_bn = batch_norm(conv1, 64, is_train)
+
+        images_tp = tf.transpose(images, perm=[0, 2, 1])
+
+        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
+        biases2 = bias_variable([64], name='biases')
+        conv12 = conv2d(images_tp, kernel2) + biases2
+
+        add_layer1 = tf.add(conv1, conv12)
+
+        conv1_bn = batch_norm(add_layer1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
         # variable_summaries(conv1)
         # variable_summaries(conv1_bn)
+
         variable_summaries(conv1_activation, "conv1")
     # pool1
     with tf.variable_scope('pool1'):
@@ -101,7 +111,16 @@ def inference(images, images_tp, keep_prob, is_train):
         kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv2 = conv2d(pool1, kernel) + biases
-        conv2_bn = batch_norm(conv2, 64, is_train)
+
+        pool1_tp = tf.transpose(pool1, perm=[0, 2, 1])
+
+        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
+        biases2 = bias_variable([64], name='biases')
+        conv22 = conv2d(pool1_tp, kernel2) + biases2
+
+        add_layer2 = tf.add(conv2, conv22)
+
+        conv2_bn = batch_norm(add_layer2, 64, is_train)
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
         # variable_summaries(conv2)
         # variable_summaries(conv2_bn)
