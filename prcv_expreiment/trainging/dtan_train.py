@@ -9,17 +9,18 @@ import tensorflow as tf
 
 # from model import temporal_difference_v0 as td_model
 # from model import temporal_difference_sw as td_model
-
+sys.path.append(os.path.abspath('.'))
+print(os.path.abspath('.'))
 from prcv_expreiment.model import dtan as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
-GPU_NUM = "1"
+GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 # SIMPLE_NUM = 6
 # LANDMARK_LENGTH = 68*2*SIMPLE_NUM
 # NUM_CLASSES = 8
-sys.path.append(os.path.abspath('..'))
+
 
 
 def placeholder_inputs():
