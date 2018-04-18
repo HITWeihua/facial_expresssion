@@ -88,7 +88,7 @@ def inference(images, keep_prob, is_train):
         biases = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel) + biases
 
-        images_tp = tf.transpose(images, perm=[0, 2, 1])
+        images_tp = tf.transpose(images, perm=[0, 1, 3, 2])
 
         kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases2 = bias_variable([64], name='biases')
@@ -112,7 +112,7 @@ def inference(images, keep_prob, is_train):
         biases = bias_variable([64], name='biases')
         conv2 = conv2d(pool1, kernel) + biases
 
-        pool1_tp = tf.transpose(pool1, perm=[0, 2, 1])
+        pool1_tp = tf.transpose(pool1, perm=[0, 1, 3, 2])
 
         kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases2 = bias_variable([64], name='biases')
