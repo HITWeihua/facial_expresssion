@@ -113,7 +113,7 @@ def inference(images, keep_prob, is_train):
 
         pool1_tp = tf.transpose(pool1, perm=[0, 1, 3, 2])
 
-        kernel2 = weight_variable([5, 5, 32, 32], stddev=0.1, name='weights', wd=0.01)
+        kernel2 = weight_variable([1, 3, 32, 32], stddev=0.1, name='weights', wd=0.01)
         biases2 = bias_variable([32], name='biases')
         conv22 = conv2d(pool1_tp, kernel2) + biases2
 
