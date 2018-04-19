@@ -57,12 +57,9 @@ def read_and_decode(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
+                                           'landmarks_raw': tf.FixedLenFeature([model.OULU_LANDMARKS_LENGTH], tf.float32),
                                        })
-    img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
+    landmark = tf.cast(features['landmarks_raw'], tf.float32)
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -76,12 +73,9 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
+                                           'landmarks_raw': tf.FixedLenFeature([model.OULU_LANDMARKS_LENGTH], tf.float32),  # 24576+816=29624
                                        })
-    img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
+    landmark = tf.cast(features['landmarks_raw'], tf.float32)
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -196,7 +190,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "./oulu_el_joint_new"
+    base_path = "./oulu_landmark"
     train_correct = []
     test_correct = []
     for i in range(10):
