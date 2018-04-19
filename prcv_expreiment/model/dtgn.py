@@ -81,42 +81,11 @@ def variable_summaries(var, name, is_conv=False):
             tf.summary.image('image', tf.reshape(var[:, :, :, 0], [-1, 64, 64, 1]))
 
 
-def inference(images, keep_prob, is_train):
-    # conv1
-    with tf.variable_scope('conv1'):
-        kernel = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([64], name='biases')
-        conv1 = conv2d(images, kernel) + biases
-        conv1_bn = batch_norm(conv1, 64, is_train)
-        conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
-        # variable_summaries(conv1)
-        # variable_summaries(conv1_bn)
-        variable_summaries(conv1_activation, "conv1")
-    # pool1
-    with tf.variable_scope('pool1'):
-        pool1 = max_pool_2x2(conv1_activation)  # 32*32
-
-    # conv2
-    with tf.variable_scope('conv2'):
-        kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([64], name='biases')
-        conv2 = conv2d(pool1, kernel) + biases
-        conv2_bn = batch_norm(conv2, 64, is_train)
-        conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
-        # variable_summaries(conv2)
-        # variable_summaries(conv2_bn)
-        variable_summaries(conv2_activation, "conv2")
-
-    # pool2
-    with tf.variable_scope('pool2'):
-        pool2 = tf.nn.max_pool(conv2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
-
-    # fc1
-    h_pool2_flat = tf.reshape(pool2, [-1, 16 * 16 * 64])
+def inference(landmarks, keep_prob, is_train):
     with tf.variable_scope('fc1'):
-        weights = weight_variable([16 * 16 * 64, 500], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([OULU_LANDMARKS_LENGTH, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
-        fc_1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
+        fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
         variable_summaries(fc_1, 'fc1')
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
