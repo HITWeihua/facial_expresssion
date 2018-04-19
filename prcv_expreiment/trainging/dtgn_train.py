@@ -11,7 +11,7 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtan as model
+from prcv_expreiment.model import dtgn as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -62,7 +62,7 @@ def read_and_decode(filename):
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
+    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -81,7 +81,7 @@ def read_and_decode_4_test(filename):
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
+    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
