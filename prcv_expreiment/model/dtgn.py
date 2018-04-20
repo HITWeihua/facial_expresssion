@@ -82,7 +82,7 @@ def variable_summaries(var, name, is_conv=False):
 
 
 def inference(landmarks, keep_prob, is_train):
-    with tf.variable_scope('fc1'):
+    with tf.variable_scope('dtgn_fc1'):
         weights = weight_variable([OULU_LANDMARKS_LENGTH, 100], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([100], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
@@ -90,7 +90,7 @@ def inference(landmarks, keep_prob, is_train):
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
-    with tf.variable_scope('fc2'):
+    with tf.variable_scope('dtgn_fc2'):
         weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([600], name='biases')
         fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
@@ -98,7 +98,7 @@ def inference(landmarks, keep_prob, is_train):
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
-    with tf.variable_scope('fc3_ep'):
+    with tf.variable_scope('dtgn_fc3_ep'):
         weights = weight_variable([600, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc2_drop, weights) + biases

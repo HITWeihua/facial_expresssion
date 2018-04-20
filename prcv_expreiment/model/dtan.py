@@ -83,7 +83,7 @@ def variable_summaries(var, name, is_conv=False):
 
 def inference(images, keep_prob, is_train):
     # conv1
-    with tf.variable_scope('conv1'):
+    with tf.variable_scope('dtan_conv1'):
         kernel = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel) + biases
@@ -93,11 +93,11 @@ def inference(images, keep_prob, is_train):
         # variable_summaries(conv1_bn)
         variable_summaries(conv1_activation, "conv1")
     # pool1
-    with tf.variable_scope('pool1'):
+    with tf.variable_scope('dtan_pool1'):
         pool1 = max_pool_2x2(conv1_activation)  # 32*32
 
     # conv2
-    with tf.variable_scope('conv2'):
+    with tf.variable_scope('dtan_conv2'):
         kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv2 = conv2d(pool1, kernel) + biases
@@ -108,12 +108,12 @@ def inference(images, keep_prob, is_train):
         variable_summaries(conv2_activation, "conv2")
 
     # pool2
-    with tf.variable_scope('pool2'):
+    with tf.variable_scope('dtan_pool2'):
         pool2 = tf.nn.max_pool(conv2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
     # fc1
     h_pool2_flat = tf.reshape(pool2, [-1, 16 * 16 * 64])
-    with tf.variable_scope('fc1'):
+    with tf.variable_scope('dtan_fc1'):
         weights = weight_variable([16 * 16 * 64, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
@@ -121,7 +121,7 @@ def inference(images, keep_prob, is_train):
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
-    with tf.variable_scope('fc2'):
+    with tf.variable_scope('dtan_fc2'):
         weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
@@ -129,7 +129,7 @@ def inference(images, keep_prob, is_train):
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
-    with tf.variable_scope('fc3_ep'):
+    with tf.variable_scope('dtan_fc3_ep'):
         weights = weight_variable([500, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc2_drop, weights) + biases

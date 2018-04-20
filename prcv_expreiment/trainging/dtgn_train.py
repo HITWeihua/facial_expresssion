@@ -115,7 +115,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        # saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
@@ -184,8 +184,11 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
+            saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtgn.ckpt")  # 将模型保存到save/model.ckpt文件
+            print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
+
     return last_train_correct, last_test_correct
 
 
