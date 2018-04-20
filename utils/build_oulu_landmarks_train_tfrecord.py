@@ -211,13 +211,13 @@ if __name__ == '__main__':
                                                 add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False,
-                                                add_noise=True, rotation=0)
+                                                add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False,
-                                                add_noise=True, rotation=0)
+                                                add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False,
-                                                add_noise=True, rotation=0)
+                                                add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
 
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
@@ -233,13 +233,13 @@ if __name__ == '__main__':
                                                 add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
-                                                add_noise=True, rotation=0)
+                                                add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
-                                                add_noise=True, rotation=0)
+                                                add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
-                                                add_noise=True, rotation=0)
+                                                add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 total_samples += 14
                 # print(total_samples)
