@@ -9,7 +9,7 @@ import time
 def add_gaussian_noise(landmarks):
     x_noise = np.random.normal(0, 0.01, (len(landmarks)))
     y_noise = np.random.normal(0, 0.01, (len(landmarks)))
-    landmarks = np.array(landmarks)
+    # landmarks = np.array(landmarks)
     landmarks[:, 0] += x_noise
     landmarks[:, 1] += y_noise
     return landmarks
@@ -23,7 +23,7 @@ def rotaiton_coordinate(landmarks, rotation):
     #     landmarks[i] = (float(a[0]+32), float(a[1]+32))
     for i in landmarks:
         a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(i).T
-        i = (float(a[0]), float(a[1]))
+        i = [float(a[0]), float(a[1])]
     return landmarks
 
 
@@ -60,8 +60,8 @@ def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=
         # landmarks = [(int(x[0]), int(x[1])) for x in landmarks]
 
         if add_noise:
-            landmarks = add_gaussian_noise(landmarks)
-        landmarks = landmarks.flatten()
+            landmarks = add_gaussian_noise(np.array(landmarks))
+        landmarks = np.array(landmarks).flatten()
 
         express_array = np.hstack((express_array, landmarks))
 

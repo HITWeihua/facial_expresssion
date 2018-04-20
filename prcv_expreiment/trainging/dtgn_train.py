@@ -142,7 +142,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                 # Fill a feed dictionary with the actual set of images and labels
                 # for this particular training step.
                 img, l = sess.run([images_batch, label_batch])
-                feed_dict = fill_feed_dict(img, l, 0.5, True, images_placeholder, labels_placeholder, keep_prob, is_train)
+                feed_dict = fill_feed_dict(img, l, 0.9, True, images_placeholder, labels_placeholder, keep_prob, is_train)
 
                 # Run one step of the model.  The return values are the activations
                 # from the `train_op` (which is discarded) and the `loss` Op.  To
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--learning_rate',
         type=float,
-        default=0.001,
+        default=0.001,  # 0.001
         help='Initial learning rate.'
     )
     parser.add_argument(
