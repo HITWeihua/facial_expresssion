@@ -11,7 +11,7 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtan as model
+from prcv_expreiment.model import dtgn as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -27,20 +27,20 @@ def placeholder_inputs():
     # images_placeholders = []
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
-    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
+    # images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
+    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.OULU_LANDMARKS_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
-    return images_placeholder, labels_placeholder, keep_prob, is_train
+    return landmarks_placeholder, labels_placeholder, keep_prob, is_train
 
 
-def fill_feed_dict(img, l, keep, is_train_value, images_placeholder, labels_placeholder, keep_prob, is_train):
+def fill_feed_dict(ld, l, keep, is_train_value, landmarks_placeholder, labels_placeholder, keep_prob, is_train):
 
-    images_feed = img
+    images_feed = ld
     label_feed = l
     feed_dict = {
-        images_placeholder: images_feed,
+        landmarks_placeholder: images_feed,
         labels_placeholder: label_feed,
         keep_prob: keep,
         is_train: is_train_value
@@ -57,14 +57,11 @@ def read_and_decode(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
+                                           'landmarks_raw': tf.FixedLenFeature([model.OULU_LANDMARKS_LENGTH], tf.float32),
                                        })
-    img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    landmark = tf.cast(features['landmarks_raw'], tf.float32)
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return landmark, label
 
 
 def read_and_decode_4_test(filename):
@@ -76,14 +73,11 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
+                                           'landmarks_raw': tf.FixedLenFeature([model.OULU_LANDMARKS_LENGTH], tf.float32),  # 24576+816=29624
                                        })
-    img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    landmark = tf.cast(features['landmarks_raw'], tf.float32)
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return landmark, label
 
 
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
@@ -121,15 +115,15 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        # saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0418/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0418/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0420/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0420/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
@@ -148,7 +142,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                 # Fill a feed dictionary with the actual set of images and labels
                 # for this particular training step.
                 img, l = sess.run([images_batch, label_batch])
-                feed_dict = fill_feed_dict(img, l, 0.5, True, images_placeholder, labels_placeholder, keep_prob, is_train)
+                feed_dict = fill_feed_dict(img, l, 0.9, True, images_placeholder, labels_placeholder, keep_prob, is_train)
 
                 # Run one step of the model.  The return values are the activations
                 # from the `train_op` (which is discarded) and the `loss` Op.  To
@@ -190,30 +184,34 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
+            saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtgn/dtgn.ckpt")  # 将模型保存到save/model.ckpt文件
+            print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
+
     return last_train_correct, last_test_correct
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_el_joint_new"
+    base_path = "/home/duheran/facial_expresssion/oulu_landmark"
     train_correct = []
     test_correct = []
-    for i in range(10):
-        test_train_dir = os.path.join(base_path, str(i))
-        test_train_files = os.listdir(test_train_dir)
-        for file_name in test_train_files:
-            if 'test' in file_name:
-                test_file = file_name
-            elif 'train' in file_name:
-                train_file = file_name
-        train_tfrecord_path = os.path.join(test_train_dir, train_file)
-        test_tfrecord_path = os.path.join(test_train_dir, test_file)
-        # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
-        test_batch_size = 48
-        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
-        train_correct.append(train)
-        test_correct.append(test)
+    # for i in range(10):
+    test_train_dir = os.path.join(base_path, str(0))
+    test_train_files = os.listdir(test_train_dir)
+    for file_name in test_train_files:
+        if 'test' in file_name:
+            test_file = file_name
+        elif 'train' in file_name:
+            train_file = file_name
+    train_tfrecord_path = os.path.join(test_train_dir, train_file)
+    test_tfrecord_path = os.path.join(test_train_dir, test_file)
+    # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
+    test_batch_size = 48
+    train, test = run_training(0, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
+    train_correct.append(train)
+    test_correct.append(test)
+
     print(np.array(train_correct).shape)
     print(np.array(test_correct).shape)
     print(np.array(train_correct).mean(axis=1))
@@ -227,7 +225,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--learning_rate',
         type=float,
-        default=0.001,
+        default=0.001,  # 0.001
         help='Initial learning rate.'
     )
     parser.add_argument(
@@ -239,7 +237,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=3000,
+        default=30000,
         help='max steps initial 3000.'
 
     )

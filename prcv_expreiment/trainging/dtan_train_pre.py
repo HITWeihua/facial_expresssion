@@ -121,15 +121,15 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        # saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
-            train_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0418/'+str(fold_num)+'/train', sess.graph)
-            test_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0418/'+str(fold_num)+'/test', sess.graph)
+            train_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0420/'+str(fold_num)+'/train', sess.graph)
+            test_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0420/'+str(fold_num)+'/test', sess.graph)
 
             # And then after everything is built:
 
@@ -190,6 +190,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
+            saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtan/dtan.ckpt")  # 将模型保存到save/model.ckpt文件
+            print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
     return last_train_correct, last_test_correct

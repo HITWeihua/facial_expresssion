@@ -25,7 +25,7 @@ def batch_norm(x, n_out, is_train):
     Return:
         normed:      batch-normalized maps
     """
-    with tf.variable_scope('bn'):
+    with tf.variable_scope('dtan_bn'):
         beta = tf.Variable(tf.constant(0.0, shape=[n_out]),
                                      name='beta', trainable=True)
         gamma = tf.Variable(tf.constant(1.0, shape=[n_out]),

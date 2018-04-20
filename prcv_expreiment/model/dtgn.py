@@ -25,7 +25,7 @@ def batch_norm(x, n_out, is_train):
     Return:
         normed:      batch-normalized maps
     """
-    with tf.variable_scope('bn'):
+    with tf.variable_scope('dtgn_bn'):
         beta = tf.Variable(tf.constant(0.0, shape=[n_out]),
                                      name='beta', trainable=True)
         gamma = tf.Variable(tf.constant(1.0, shape=[n_out]),
@@ -118,7 +118,7 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    20000,
+                                    15000,
                                     0.1,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
