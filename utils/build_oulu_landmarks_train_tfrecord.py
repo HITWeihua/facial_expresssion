@@ -9,6 +9,7 @@ import time
 def add_gaussian_noise(landmarks):
     x_noise = np.random.normal(0, 0.01, (len(landmarks)))
     y_noise = np.random.normal(0, 0.01, (len(landmarks)))
+    landmarks = np.array(landmarks)
     landmarks[:, 0] += x_noise
     landmarks[:, 1] += y_noise
     return landmarks
@@ -60,7 +61,7 @@ def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=
 
         if add_noise:
             landmarks = add_gaussian_noise(landmarks)
-        landmarks = np.array(landmarks).flatten()
+        landmarks = landmarks.flatten()
 
         express_array = np.hstack((express_array, landmarks))
 
