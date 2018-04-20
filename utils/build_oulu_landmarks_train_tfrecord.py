@@ -7,8 +7,11 @@ import time
 
 
 def add_gaussian_noise(landmarks):
-    a = np.random.normal(0, 0.01, (len(landmarks)))
-    return landmarks+a
+    x_noise = np.random.normal(0, 0.01, (len(landmarks)))
+    y_noise = np.random.normal(0, 0.01, (len(landmarks)))
+    landmarks[:, 0] += x_noise
+    landmarks[:, 1] += y_noise
+    return landmarks
 
 
 def rotaiton_coordinate(landmarks, rotation):
@@ -54,9 +57,10 @@ def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=
             landmarks = rotaiton_coordinate(landmarks, rotation)
         # landmarks = [(round(x[0], 2), round(x[1], 2)) for x in landmarks]
         # landmarks = [(int(x[0]), int(x[1])) for x in landmarks]
-        landmarks = np.array(landmarks).flatten()
+
         if add_noise:
             landmarks = add_gaussian_noise(landmarks)
+        landmarks = np.array(landmarks).flatten()
 
         express_array = np.hstack((express_array, landmarks))
 
@@ -211,13 +215,13 @@ if __name__ == '__main__':
                                                 add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False,
-                                                add_noise=False, rotation=1)
+                                                add_noise=True, rotation=0)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False,
-                                                add_noise=False, rotation=1)
+                                                add_noise=True, rotation=0)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False,
-                                                add_noise=False, rotation=1)
+                                                add_noise=True, rotation=0)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
 
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
@@ -233,13 +237,13 @@ if __name__ == '__main__':
                                                 add_noise=False, rotation=1)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
-                                                add_noise=False, rotation=1)
+                                                add_noise=True, rotation=0)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
-                                                add_noise=False, rotation=1)
+                                                add_noise=True, rotation=0)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=True,
-                                                add_noise=False, rotation=1)
+                                                add_noise=True, rotation=0)
                 concat_landmark_and_write2file(landmarks_vec, lable_vec)
                 total_samples += 14
                 # print(total_samples)
