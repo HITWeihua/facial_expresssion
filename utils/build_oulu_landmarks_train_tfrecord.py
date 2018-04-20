@@ -45,14 +45,14 @@ def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=
         with open(landmark_path, 'r') as f:
             landmarks = f.readlines()
         landmarks = [re.split(r'[\(\)\,\n]+', x) for x in landmarks]
-        landmarks = [(float(x[1]), float(x[2])) for x in landmarks]
+        landmarks = [[float(x[1]), float(x[2])] for x in landmarks]
         # landmarks = [(round(float(x[0]), 2), round(float(x[1]), 2)) for x in landmarks]
         nose_x = landmarks[30][0]
         nose_y = landmarks[30][1]
         deviation_x, deviation_y = np.std(landmarks, axis=0)  # axis=0计算每一列的标准差
-        landmarks = [((x[0]-nose_x)/deviation_x, (x[1]-nose_y)/deviation_y) for x in landmarks]
+        landmarks = [[(x[0]-nose_x)/deviation_x, (x[1]-nose_y)/deviation_y] for x in landmarks]
         if is_flipped:
-            landmarks = [(-x[0], x[1]) for x in landmarks]
+            landmarks = [[-x[0], x[1]] for x in landmarks]
         if rotation != 0:
             landmarks = rotaiton_coordinate(landmarks, rotation)
         # landmarks = [(round(x[0], 2), round(x[1], 2)) for x in landmarks]
