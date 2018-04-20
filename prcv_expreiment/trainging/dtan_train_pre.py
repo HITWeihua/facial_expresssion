@@ -201,21 +201,21 @@ def main(_):
     base_path = "/home/duheran/facial_expresssion/oulu_el_joint_new"
     train_correct = []
     test_correct = []
-    for i in range(10):
-        test_train_dir = os.path.join(base_path, str(i))
-        test_train_files = os.listdir(test_train_dir)
-        for file_name in test_train_files:
-            if 'test' in file_name:
-                test_file = file_name
-            elif 'train' in file_name:
-                train_file = file_name
-        train_tfrecord_path = os.path.join(test_train_dir, train_file)
-        test_tfrecord_path = os.path.join(test_train_dir, test_file)
-        # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
-        test_batch_size = 48
-        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
-        train_correct.append(train)
-        test_correct.append(test)
+    # for i in range(10):
+    test_train_dir = os.path.join(base_path, str(0))
+    test_train_files = os.listdir(test_train_dir)
+    for file_name in test_train_files:
+        if 'test' in file_name:
+            test_file = file_name
+        elif 'train' in file_name:
+            train_file = file_name
+    train_tfrecord_path = os.path.join(test_train_dir, train_file)
+    test_tfrecord_path = os.path.join(test_train_dir, test_file)
+    # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
+    test_batch_size = 48
+    train, test = run_training(0, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
+    train_correct.append(train)
+    test_correct.append(test)
     print(np.array(train_correct).shape)
     print(np.array(test_correct).shape)
     print(np.array(train_correct).mean(axis=1))
