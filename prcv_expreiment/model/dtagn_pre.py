@@ -135,6 +135,7 @@ def inference(images, landmarks, keep_prob, is_train):
         biases = bias_variable([500], name='biases')
         fc_2 = tf.nn.relu(tf.matmul(feature_concat, weights) + biases)
         variable_summaries(fc_2, 'fc2')
+        fc_2 = tf.add(fc_2, fc_1)
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
