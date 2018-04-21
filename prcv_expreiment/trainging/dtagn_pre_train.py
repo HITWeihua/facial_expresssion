@@ -91,17 +91,17 @@ def read_and_decode_4_test(filename):
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
     with tf.Graph().as_default():
         # with tf.device('/gpu:'+GPU_NUM):
-        images, label = read_and_decode(train_tfrecord_path)
+        images, landmarks, label = read_and_decode(train_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch, label_batch = tf.train.shuffle_batch([images, label], batch_size=train_batch_size, capacity=1000,
+        images_batch, landmarks_batch, label_batch = tf.train.shuffle_batch([images, landmarks, label], batch_size=train_batch_size, capacity=1000,
                                                         min_after_dequeue=800)
 
-        images_test, label_test = read_and_decode_4_test(test_tfrecord_path)
+        images_test, landmarks_test, label_test = read_and_decode_4_test(test_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch_test, label_batch_test = tf.train.batch([images_test, label_test], batch_size=test_batch_size, capacity=1000)
+        images_batch_test, landmarks_batch_test, label_batch_test = tf.train.batch([images_test, landmarks_test, label_test], batch_size=test_batch_size, capacity=1000)
 
         # Generate placeholders for the images and labels.
-        images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
+        images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
         fe_logits, dtgn_features, dtgn_fc2, return_weights = model.inference(images_placeholder, keep_prob, is_train)
