@@ -12,15 +12,15 @@ def add_gaussian_noise(landmarks):
 
 
 def rotaiton_coordinate(landmarks, rotation):
-    # theata = np.random.random()*(np.pi/5)-(np.pi/10)
-    theata = -rotation * np.pi / 180
-    for i in range(len(landmarks)):
-        a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(
-            (landmarks[i][0] - 32, landmarks[i][1] - 32)).T
-        landmarks[i] = (float(a[0] + 32), float(a[1] + 32))
-    # for i in landmarks:
-    #     a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(i).T
-    #     i = (float(a[0]), float(a[1]))
+    theata = np.random.random()*(np.pi/5)-(np.pi/10)
+    # theata = -rotation * np.pi / 180
+    # for i in range(len(landmarks)):
+    #     a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(
+    #         (landmarks[i][0] - 32, landmarks[i][1] - 32)).T
+    #     landmarks[i] = (float(a[0] + 32), float(a[1] + 32))
+    for i in landmarks:
+        a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(i).T
+        i = (float(a[0]), float(a[1]))
     return landmarks
 
 
