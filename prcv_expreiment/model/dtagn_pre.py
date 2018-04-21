@@ -172,7 +172,7 @@ def loss(logits, labels_placeholder, dtgn_features, dtgn_fc2):
     labels = tf.to_int64(labels_placeholder)
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
-    tf.add_to_collection('losses', squre_error_mean * 0.5 + xentropy_mean * 0.5)
+    tf.add_to_collection('losses', squre_error_mean * 0.8 + xentropy_mean * 0.2)
     # tf.add_to_collection('losses', xentropy_mean)
     tf.summary.scalar('xentropy_mean', xentropy_mean)
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
@@ -181,7 +181,7 @@ def loss(logits, labels_placeholder, dtgn_features, dtgn_fc2):
 def training(total_loss, init_learning_rate, global_step, tra_vars):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    5000 ,
+                                    2500 ,
                                     0.1,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)

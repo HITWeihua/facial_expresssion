@@ -11,7 +11,7 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtan as model
+from prcv_expreiment.model import dtagn_pre as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -28,7 +28,7 @@ def placeholder_inputs():
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
     images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.LANDMARKS_LENGTH])
+    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.OULU_LANDMARKS_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
@@ -104,7 +104,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits, dtgn_features, dtgn_fc2, return_weights = model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits, dtgn_features, dtgn_fc2, return_weights = model.inference(images_placeholder, landmarks_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = model.loss(fe_logits, labels_placeholder, dtgn_features, dtgn_fc2)
@@ -113,7 +113,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         global_step = tf.Variable(0, trainable=False)
 
         tvars = tf.trainable_variables()
-        train_vars = [var for var in tvars if 'dtgn_fc' in var.name]
+        train_vars = [var for var in tvars if 'dtgn_fc' not in var.name]
+        restore_vars = [var for var in tvars if 'dtgn_fc' in var.name]
         train_op = model.training(loss, flags.learning_rate, global_step, train_vars)
 
         # Add the Op to compare the logits to the labels during evaluation.
@@ -126,7 +127,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(restore_vars)
 
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
@@ -145,8 +146,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
-            img_test, l_test = sess.run([images_batch_test, label_batch_test])
-            test_feed_dict = fill_feed_dict(img_test, l_test, 1.0, False, images_placeholder, labels_placeholder, keep_prob, is_train)
+            img_test, lm_test, l_test = sess.run([images_batch_test, landmarks_batch_test, label_batch_test])
+            test_feed_dict = fill_feed_dict(img_test, lm_test, l_test, 1.0, False, images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train)
             # Start the training loop.
             last_train_correct = []
             last_test_correct = []
@@ -155,8 +156,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
                 # Fill a feed dictionary with the actual set of images and labels
                 # for this particular training step.
-                img, l = sess.run([images_batch, label_batch])
-                feed_dict = fill_feed_dict(img, l, 0.5, True, images_placeholder, labels_placeholder, keep_prob, is_train)
+                img, lm, l = sess.run([images_batch, landmarks_batch, label_batch])
+                feed_dict = fill_feed_dict(img, lm, l, 0.5, True, images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train)
 
                 # Run one step of the model.  The return values are the activations
                 # from the `train_op` (which is discarded) and the `loss` Op.  To
@@ -249,7 +250,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=10000,
+        default=5000,
         help='max steps initial 3000.'
 
     )
