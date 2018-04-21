@@ -128,10 +128,12 @@ def inference(images, landmarks, keep_prob, is_train):
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
+    with tf.variable_scope('weight_concat'):
+        feature_concat = tf.concat(1, [fc_1, dtgn_features])
     with tf.variable_scope('dtan_fc2'):
-        weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([1100, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
-        fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
+        fc_2 = tf.nn.relu(tf.matmul(feature_concat, weights) + biases)
         variable_summaries(fc_2, 'fc2')
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
