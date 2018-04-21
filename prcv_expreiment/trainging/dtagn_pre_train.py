@@ -28,19 +28,21 @@ def placeholder_inputs():
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
     images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
+    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.LANDMARK_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
-    return images_placeholder, labels_placeholder, keep_prob, is_train
+    return images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train
 
 
-def fill_feed_dict(img, l, keep, is_train_value, images_placeholder, labels_placeholder, keep_prob, is_train):
+def fill_feed_dict(img, lm, l, keep, is_train_value, images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train):
 
     images_feed = img
+    landmarks_feed = lm
     label_feed = l
     feed_dict = {
         images_placeholder: images_feed,
+        landmarks_placeholder: landmarks_feed,
         labels_placeholder: label_feed,
         keep_prob: keep,
         is_train: is_train_value
@@ -62,9 +64,9 @@ def read_and_decode(filename):
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    landmarks = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return images, landmarks, label
 
 
 def read_and_decode_4_test(filename):
@@ -81,9 +83,9 @@ def read_and_decode_4_test(filename):
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    landmarks = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [model.OULU_LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return images, landmarks, label
 
 
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
@@ -109,7 +111,10 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
         # Add to the Graph the Ops that calculate and apply gradients.
         global_step = tf.Variable(0, trainable=False)
-        train_op = model.training(loss, flags.learning_rate, global_step)
+
+        tvars = tf.trainable_variables()
+        train_vars = [var for var in tvars if 'dtgn_fc' in var.name]
+        train_op = model.training(loss, flags.learning_rate, global_step, train_vars)
 
         # Add the Op to compare the logits to the labels during evaluation.
         eval_correct = model.evaluation(fe_logits, labels_placeholder)
@@ -126,7 +131,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
-
+            saver.restore(sess,  "/home/duheran/facial_expresssion/save/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
             # Instantiate a SummaryWriter to output summaries and the Graph.
             train_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0421/'+str(fold_num)+'/train', sess.graph)
             test_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0421/'+str(fold_num)+'/test', sess.graph)
@@ -190,7 +195,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
-            saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtan/dtan.ckpt")  # 将模型保存到save/model.ckpt文件
+            saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtagn/dtagn.ckpt")  # 将模型保存到save/model.ckpt文件
             print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
@@ -198,7 +203,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_el_joint_new"
+    base_path = "/home/duheran/facial_expresssion/oulu_el_joint"
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -241,7 +246,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=3000,
+        default=10000,
         help='max steps initial 3000.'
 
     )
