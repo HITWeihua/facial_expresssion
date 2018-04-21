@@ -104,10 +104,10 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits, dtgn_features, dtgn_fc2, return_weights = model.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
-        loss = model.loss(fe_logits, labels_placeholder)
+        loss = model.loss(fe_logits, labels_placeholder, dtgn_features, dtgn_fc2)
 
         # Add to the Graph the Ops that calculate and apply gradients.
         global_step = tf.Variable(0, trainable=False)
@@ -131,7 +131,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
-            saver.restore(sess,  "/home/duheran/facial_expresssion/save/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
+
             # Instantiate a SummaryWriter to output summaries and the Graph.
             train_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0421/'+str(fold_num)+'/train', sess.graph)
             test_writer = tf.summary.FileWriter('./summaries_new/summaries_graph_0421/'+str(fold_num)+'/test', sess.graph)
@@ -140,6 +140,9 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
             # Run the Op to initialize the variables.
             sess.run(init)
+            saver.restore(sess, "/home/duheran/facial_expresssion/save/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
+            print("varibles:{}".format(sess.run(return_weights)))
+
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
             img_test, l_test = sess.run([images_batch_test, label_batch_test])

@@ -158,9 +158,11 @@ def inference(images, landmarks, keep_prob, is_train):
         biases = bias_variable([600], name='biases')
         dtgn_fc2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
         variable_summaries(fc_2, 'fc2')
+
+        return_weights = weights
         # fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
-    return fe_logits, dtgn_features, dtgn_fc2
+    return fe_logits, dtgn_features, dtgn_fc2, return_weights
 
 
 def loss(logits, labels_placeholder, dtgn_features, dtgn_fc2):
