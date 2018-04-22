@@ -11,7 +11,8 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtan as model
+# from prcv_expreiment.model import resnet_dtan_v2 as model
+from prcv_expreiment.model import image_sepreate as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -124,7 +125,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.

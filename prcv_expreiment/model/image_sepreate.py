@@ -2,10 +2,15 @@ import tensorflow as tf
 
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
-NUM_CLASSES = 6
-SIMPLE_NUM = 7
-LANDMARKS_LENGTH = 68*2*SIMPLE_NUM
+CK_NUM_CLASSES = 8
+CK_SIMPLE_NUM = 6
+CK_LANDMARKS_LENGTH = 68*2*CK_SIMPLE_NUM
+
+OULU_NUM_CLASSES = 6
+OULU_SIMPLE_NUM = 7
+OULU_LANDMARKS_LENGTH = 68*2*OULU_SIMPLE_NUM
 ACTIVATION = tf.nn.relu
+
 
 
 def batch_norm(x, n_out, is_train):
@@ -127,7 +132,7 @@ def block_top(image, is_train):
 
 def inference(images, keep_prob, is_train):
     with tf.variable_scope('block_top'):
-        for i in range(SIMPLE_NUM):
+        for i in range(OULU_SIMPLE_NUM):
             if i == 0:
                 frames_features = block_top(images[:, :, :, i], is_train)
                 inner_features_concat = frames_features
@@ -149,9 +154,9 @@ def inference(images, keep_prob, is_train):
 
 
     # fc1
-    h_pool4_flat = tf.reshape(inner_features_concat, [-1, 4 * 4 * 96])
+    h_pool4_flat = tf.reshape(inner_features_concat, [-1, 4 * 4 * 112])
     with tf.variable_scope('fc1'):
-       weights = weight_variable([4 * 4 * 96, 512], stddev=0.1, name='weights', wd=0.01)
+       weights = weight_variable([4 * 4 * 112, 512], stddev=0.1, name='weights', wd=0.01)
        biases = bias_variable([512], name='biases')
        fc_1 = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
        variable_summaries(fc_1)
@@ -159,8 +164,8 @@ def inference(images, keep_prob, is_train):
 
     # fc3 facial expression
     with tf.variable_scope('fc3_ep'):
-        weights = weight_variable([512, NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([NUM_CLASSES], name='biases')
+        weights = weight_variable([512, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+        biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc_1_drop, weights) + biases
 
     return fe_logits

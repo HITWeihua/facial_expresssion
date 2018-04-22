@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 CK_NUM_CLASSES = 8
@@ -25,7 +24,7 @@ def batch_norm(x, n_out, is_train):
     Return:
         normed:      batch-normalized maps
     """
-    with tf.variable_scope('dtgn_bn'):
+    with tf.variable_scope('bn'):
         beta = tf.Variable(tf.constant(0.0, shape=[n_out]),
                                      name='beta', trainable=True)
         gamma = tf.Variable(tf.constant(1.0, shape=[n_out]),
@@ -67,8 +66,8 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
-def variable_summaries(var, name, is_conv=False):
-    with tf.name_scope(name + '/summaries'):
+def variable_summaries(var):
+    with tf.name_scope('summaries'):
         mean = tf.reduce_mean(var)
         tf.summary.scalar('mean', mean)
         # with tf.name_scope('stddev'):
@@ -77,119 +76,126 @@ def variable_summaries(var, name, is_conv=False):
             # tf.summary.scalar('max', tf.reduce_max(var))
             # tf.summary.scalar('min', tf.reduce_min(var))
         tf.summary.histogram('histogram', var)
-        if is_conv:
-            tf.summary.image('image', tf.reshape(var[:, :, :, 0], [-1, 64, 64, 1]))
 
 
-def inference(images, landmarks, keep_prob, is_train):
+def inference(images, keep_prob, is_train):
     # conv1
-    with tf.variable_scope('dtan_conv1'):
-        kernel = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([64], name='biases')
-        conv1 = conv2d(images, kernel) + biases
+    with tf.variable_scope('block1'):
+        kernel1 = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
+        biases1 = bias_variable([64], name='biases')
+        conv1 = conv2d(images, kernel1) + biases1
         conv1_bn = batch_norm(conv1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
-        # variable_summaries(conv1)
-        # variable_summaries(conv1_bn)
-        # variable_summaries(conv1_activation, "conv1")
-    # pool1
-    with tf.variable_scope('dtan_pool1'):
-        pool1 = max_pool_2x2(conv1_activation)  # 32*32
 
-    # conv2
-    with tf.variable_scope('dtan_conv2'):
-        kernel = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([64], name='biases')
-        conv2 = conv2d(pool1, kernel) + biases
+    with tf.variable_scope('block2'):
+        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases2 = bias_variable([64], name='biases')
+        conv2 = conv2d(conv1_activation, kernel2) + biases2
         conv2_bn = batch_norm(conv2, 64, is_train)
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
-        # variable_summaries(conv2)
-        # variable_summaries(conv2_bn)
-        variable_summaries(conv2_activation, "conv2")
+
+        kernel3 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases3 = bias_variable([64], name='biases')
+        conv3 = conv2d(conv2_activation, kernel3) + biases3
+
+        add_layer1 = tf.add(conv3, conv1_activation)
+
+        add_layer1_bn = batch_norm(add_layer1, 64, is_train)
+        add_layer1_activation = ACTIVATION(add_layer1_bn, name='activate')  # 64*64
+        variable_summaries(add_layer1_activation)
+
+    # pool1
+    with tf.variable_scope('pool1'):
+        pool1 = max_pool_2x2(add_layer1_activation)  # 32*32
+
+    # conv2
+    with tf.variable_scope('block3'):
+        kernel4 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases4 = bias_variable([64], name='biases')
+        conv4 = conv2d(pool1, kernel4) + biases4
+        conv4_bn = batch_norm(conv4, 64, is_train)
+        conv4_activation = ACTIVATION(conv4_bn, name='activate')  # 64*64
+
+        kernel5 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases5 = bias_variable([64], name='biases')
+        conv5 = conv2d(conv4_activation, kernel5) + biases5
+
+        add_layer2 = tf.add(conv5, pool1)
+
+        add_layer2_bn = batch_norm(add_layer2, 64, is_train)
+        add_layer2_activation = ACTIVATION(add_layer2_bn, name='activate')  # 64*64
+        variable_summaries(add_layer2_activation)
 
     # pool2
-    with tf.variable_scope('dtan_pool2'):
-        pool2 = tf.nn.max_pool(conv2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
+    with tf.variable_scope('pool2'):
+        pool2 = tf.nn.max_pool(add_layer2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
+
+    with tf.variable_scope('block4'):
+        kernel6 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases6 = bias_variable([64], name='biases')
+        conv6 = conv2d(pool2, kernel6) + biases6
+        conv6_bn = batch_norm(conv6, 64, is_train)
+        conv6_activation = ACTIVATION(conv6_bn, name='activate')  # 64*64
+
+        kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases7 = bias_variable([64], name='biases')
+        conv7 = conv2d(conv6_activation, kernel7) + biases7
+
+        add_layer3 = tf.add(conv7, pool2)
+
+        add_layer3_bn = batch_norm(add_layer3, 64, is_train)
+        add_layer3_activation = ACTIVATION(add_layer3_bn, name='activate')  # 64*64
+        variable_summaries(add_layer3_activation)
+
+    # pool2
+    with tf.variable_scope('pool3'):
+        pool3 = tf.nn.max_pool(add_layer3_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
+
 
     # fc1
-    h_pool2_flat = tf.reshape(pool2, [-1, 16 * 16 * 64])
-    with tf.variable_scope('dtan_fc1'):
-        weights = weight_variable([16 * 16 * 64, 500], stddev=0.1, name='weights', wd=0.01)
+    h_pool3_flat = tf.reshape(pool3, [-1, 8 * 8 * 64])
+    with tf.variable_scope('fc1'):
+        weights = weight_variable([8 * 8 * 64, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
-        fc_1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
-        variable_summaries(fc_1, 'fc1')
-        # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
-
-    with tf.variable_scope('dtgn_features'):
-        weights = weight_variable([16 * 16 * 64, 600], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([600], name='biases')
-        dtgn_features = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
-        variable_summaries(fc_1, 'fc1')
+        fc_1 = tf.nn.relu(tf.matmul(h_pool3_flat, weights) + biases)
+        variable_summaries(fc_1)
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
-    with tf.variable_scope('weight_concat'):
-        feature_concat = tf.concat([fc_1, dtgn_features], 1)
-    with tf.variable_scope('dtan_fc2'):
-        weights = weight_variable([1100, 500], stddev=0.1, name='weights', wd=0.01)
+    with tf.variable_scope('fc2'):
+        weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
-        fc_2 = tf.nn.relu(tf.matmul(feature_concat, weights) + biases)
-        variable_summaries(fc_2, 'fc2')
-        fc_2 = tf.add(fc_2, fc_1)
+        fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
+        variable_summaries(fc_2)
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
-    with tf.variable_scope('dtan_fc3_ep'):
+    with tf.variable_scope('fc3_ep'):
         weights = weight_variable([500, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc2_drop, weights) + biases
 
-
-    """
-    dtgn network
-    """
-    with tf.variable_scope('dtgn_fc1'):
-        weights = weight_variable([OULU_LANDMARKS_LENGTH, 100], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([100], name='biases')
-        fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
-        variable_summaries(fc_1, 'fc1')
-        # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
-
-    # fc2
-    with tf.variable_scope('dtgn_fc2'):
-        weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([600], name='biases')
-        dtgn_fc2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        variable_summaries(fc_2, 'fc2')
-
-        return_weights = weights
-        # fc2_drop = tf.nn.dropout(fc_2, keep_prob)
-
-    return fe_logits, dtgn_features, dtgn_fc2, return_weights
+    return fe_logits
 
 
-def loss(logits, labels_placeholder, dtgn_features, dtgn_fc2):
-    squre_error = tf.reduce_sum(tf.pow(dtgn_features - dtgn_fc2, 2)) / 600
-    squre_error_mean = tf.reduce_mean(squre_error, name='squre_error_mean')
-
+def loss(logits, labels_placeholder):
     labels = tf.to_int64(labels_placeholder)
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
-    tf.add_to_collection('losses', squre_error_mean * 0.1 + xentropy_mean * 0.9)
-    # tf.add_to_collection('losses', xentropy_mean)
+    tf.add_to_collection('losses', xentropy_mean)
     tf.summary.scalar('xentropy_mean', xentropy_mean)
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
 
-def training(total_loss, init_learning_rate, global_step, tra_vars):
+def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    2000 ,
-                                    0.3,  # 0.96  0.3
+                                    1000,
+                                    0.3,
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)
-    train_op = optimizer.minimize(total_loss, global_step=global_step, var_list=tra_vars)
+    train_op = optimizer.minimize(total_loss, global_step=global_step)
     return train_op
 
 
