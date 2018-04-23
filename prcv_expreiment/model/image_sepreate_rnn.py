@@ -76,11 +76,11 @@ def variable_summaries(var):
         # tf.summary.histogram('histogram', var)
 
 
-def conv_block(input_layer, is_train, channels):
-    kernel1 = weight_variable([5, 5, channels, channels], stddev=0.1, name='weights', wd=0.0)
-    biases1 = bias_variable([channels], name='biases')
+def conv_block(input_layer, is_train, in_channels, out_channels):
+    kernel1 = weight_variable([5, 5, in_channels, out_channels], stddev=0.1, name='weights', wd=0.0)
+    biases1 = bias_variable([out_channels], name='biases')
     conv1 = conv2d(input_layer, kernel1) + biases1
-    conv1_bn = batch_norm(conv1, channels, is_train)
+    conv1_bn = batch_norm(conv1, out_channels, is_train)
     conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
     return conv1_activation
 
@@ -119,7 +119,7 @@ def inference(images, keep_prob, is_train):
         for i in range(OULU_SIMPLE_NUM):
             if i == 0:
                 frames_features = block_top(images[:, :, :, i], is_train)
-                old_frames_features = conv_block(frames_features, is_train, 16)
+                old_frames_features = conv_block(frames_features, is_train, 16, 16)
             # elif i == 1:
             #     frames_features = block_top(images[:, :, :, i], is_train)
             #     inner_features_concat = frames_features - old_frames_features
@@ -127,7 +127,7 @@ def inference(images, keep_prob, is_train):
             else:
                 frames_features = block_top(images[:, :, :, i], is_train)
                 # inner_features_concat = tf.concat([inner_features_concat, frames_features - old_frames_features], axis=-1)
-                old_frames_features = conv_block(tf.concat([old_frames_features, frames_features], axis=-1), is_train, 16)
+                old_frames_features = conv_block(tf.concat([old_frames_features, frames_features], axis=-1), is_train, 32, 16)
 
     with tf.variable_scope('block_neck'):
         kernel1 = weight_variable([5, 5, 16, 64], stddev=0.1, name='weights', wd=0.0)
