@@ -151,7 +151,7 @@ def inference(images, keep_prob, is_train):
         pool4 = tf.nn.max_pool(layer_activation4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
     # fc1
-    h_pool4_flat = tf.reshape(inner_features_concat, [-1, 4 * 4 * 64])
+    h_pool4_flat = tf.reshape(pool4, [-1, 4 * 4 * 64])
     with tf.variable_scope('fc1'):
        weights = weight_variable([4 * 4 * 64, 512], stddev=0.1, name='weights', wd=0.01)
        biases = bias_variable([512], name='biases')

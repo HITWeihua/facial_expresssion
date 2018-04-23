@@ -130,13 +130,13 @@ def block_top(image, is_train):
     with tf.variable_scope('pool3'):
         pool3 = max_pool_2x2(layer_activation3)  # 8*8
 
-    with tf.variable_scope('block4'):
-        layer_activation4 = res_block(pool3, is_train, 16)
+    # with tf.variable_scope('block4'):
+    #     layer_activation4 = res_block(pool3, is_train, 16)
+    #
+    # with tf.variable_scope('pool4'):
+    #     pool4 = tf.nn.max_pool(layer_activation4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-    with tf.variable_scope('pool4'):
-        pool4 = tf.nn.max_pool(layer_activation4, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
-
-    return pool4
+    return pool3
 
 
 def inference(images, keep_prob, is_train):
@@ -152,7 +152,8 @@ def inference(images, keep_prob, is_train):
             else:
                 frames_features = block_top(images[:, :, :, i], is_train)
                 # inner_features_concat = tf.concat([inner_features_concat, frames_features - old_frames_features], axis=-1)
-                old_frames_features = conv_block(tf.concat([old_frames_features, frames_features], axis=-1), is_train, 16)
+                # old_frames_features = conv_block(tf.concat([old_frames_features, frames_features], axis=-1), is_train, 16)
+                old_frames_features = conv_block(tf.add(old_frames_features, frames_features), is_train, 16)
 
     # with tf.variable_scope('block_neck'):
     #     kernel1 = weight_variable([5, 5, 96, 64], stddev=0.1, name='weights', wd=0.0)
@@ -164,9 +165,9 @@ def inference(images, keep_prob, is_train):
 
 
     # fc1
-    h_pool4_flat = tf.reshape(old_frames_features, [-1, 4 * 4 * 16])
+    h_pool4_flat = tf.reshape(old_frames_features, [-1, 8 * 8 * 16])
     with tf.variable_scope('fc1'):
-       weights = weight_variable([4 * 4 * 16, 512], stddev=0.1, name='weights', wd=0.01)
+       weights = weight_variable([8 * 8 * 16, 512], stddev=0.1, name='weights', wd=0.01)
        biases = bias_variable([512], name='biases')
        fc_1 = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
        variable_summaries(fc_1)
