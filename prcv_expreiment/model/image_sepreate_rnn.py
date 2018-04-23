@@ -119,7 +119,7 @@ def inference(images, keep_prob, is_train):
         for i in range(OULU_SIMPLE_NUM):
             if i == 0:
                 frames_features = block_top(images[:, :, :, i], is_train)
-                old_frames_features = conv_block(frames_features, is_train, 16, 16)
+                old_frames_features = frames_features
             # elif i == 1:
             #     frames_features = block_top(images[:, :, :, i], is_train)
             #     inner_features_concat = frames_features - old_frames_features
@@ -127,7 +127,8 @@ def inference(images, keep_prob, is_train):
             else:
                 frames_features = block_top(images[:, :, :, i], is_train)
                 # inner_features_concat = tf.concat([inner_features_concat, frames_features - old_frames_features], axis=-1)
-                old_frames_features = conv_block(tf.concat([old_frames_features, frames_features], axis=-1), is_train, 32, 16)
+                old_frames_features = tf.add(conv_block(old_frames_features, is_train, 16, 16), frames_features)
+                # old_frames_features = tf.add(old_frames_features, frames_features)
 
     with tf.variable_scope('block_neck'):
         kernel1 = weight_variable([5, 5, 16, 64], stddev=0.1, name='weights', wd=0.0)
