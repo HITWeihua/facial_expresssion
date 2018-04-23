@@ -137,7 +137,7 @@ def inference(images, keep_prob, is_train):
         conv1_activation = ACTIVATION(conv1_bn, name='activate')
 
     with tf.variable_scope("block1"):
-        layer_activation1 = res_block(conv1_activation, is_train, 64)  # 32*32
+        layer_activation1 = res_block(conv1_activation, is_train, 64)
 
     with tf.variable_scope('pool1'):
         pool1 = max_pool_2x2(layer_activation1)  # 32*32
