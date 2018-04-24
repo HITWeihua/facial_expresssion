@@ -11,10 +11,9 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-# from prcv_expreiment.model import resnet_dtan_v2 as model
-from prcv_expreiment.model import resnet_dtan_SE as model #
-# from model import images_difference as id_model
-# from model import single_frame as td_model
+
+# from prcv_expreiment.model import resnet_dtan_SE as model
+from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM

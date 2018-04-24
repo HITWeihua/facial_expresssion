@@ -95,8 +95,9 @@ def Squeeze_excitation_layer(input_x, input_dim, out_dim, ratio, layer_name):
 
 def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, layer_name):
     with tf.variable_scope(layer_name):
-        first_dim = input_dim*input_dim/4
-        second_dim = first_dim / ratio
+        first_dim = int(input_dim*input_dim/4)
+        second_dim = int(first_dim / ratio)
+
 
         squeeze = tf.nn.avg_pool(input_x, ksize=[1, 2, 2, 64], strides=[1, 2, 2, 64], padding='VALID')
         squeeze = tf.reshape(squeeze, [-1, first_dim])
@@ -106,7 +107,7 @@ def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, 
         weights2 = weight_variable([second_dim, first_dim], stddev=0.1, name='weights', wd=0.01)
         fc_2 = tf.nn.sigmoid(tf.matmul(fc_1, weights2))
 
-        excitation = tf.reshape(fc_2, [-1, input_dim/2, input_dim/2, 1])
+        excitation = tf.reshape(fc_2, [-1, int(input_dim/2), int(input_dim/2), 1])
         excitation = tf.image.resize_nearest_neighbor(excitation, (input_dim, input_dim))
         scale = input_x * excitation
         return scale
