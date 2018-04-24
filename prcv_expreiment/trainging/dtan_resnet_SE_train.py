@@ -241,7 +241,7 @@ if __name__ == '__main__':
         '--max_steps',
         type=int,
         default=3000,
-        help='max steps initial 3000.'
+        help='max steps initial 2500.'
 
     )
     flags, unparsed = parser.parse_known_args()
