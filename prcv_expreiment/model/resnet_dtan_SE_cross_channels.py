@@ -98,8 +98,8 @@ def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, 
         first_dim = int(input_dim*input_dim/4)
         second_dim = int(first_dim / ratio)
 
-
-        squeeze = tf.nn.avg_pool(input_x, ksize=[1, 2, 2, 64], strides=[1, 2, 2, 64], padding='VALID')
+        squeeze = tf.reduce_mean(input_x, reduction_indices=[3], keep_dims=True)
+        squeeze = tf.nn.avg_pool(squeeze, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
         squeeze = tf.reshape(squeeze, [-1, first_dim])
         weights = weight_variable([first_dim, second_dim], stddev=0.1, name='weights', wd=0.01)
         # biases = bias_variable([64], name='biases')
