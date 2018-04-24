@@ -79,7 +79,7 @@ def variable_summaries(var):
 
 def Squeeze_excitation_layer(input_x, out_dim, ratio, layer_name):
     with tf.variable_scope(layer_name):
-        squeeze = tf.nn.avg_pool(input_x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+        squeeze = tf.nn.avg_pool(input_x, ksize=[1, 64, 64, 1], strides=[1, 2, 2, 1], padding='SAME')
         squeeze = tf.reshape(squeeze, [-1, out_dim])
         weights = weight_variable([64, 64], stddev=0.1, name='weights', wd=0.01)
         # biases = bias_variable([64], name='biases')
