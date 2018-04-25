@@ -137,7 +137,7 @@ def inference(images, keep_prob, is_train):
                 inner_features_concat = tf.concat([inner_features_concat, frames_features], axis=-1)
 
     with tf.variable_scope('block_neck'):
-        se_layer1 = Squeeze_excitation_layer(inner_features_concat, 112, 112, 1, "se1")
+        se_layer1 = Squeeze_excitation_layer(inner_features_concat, 64, 112, 1, "se1")
         kernel1 = weight_variable([5, 5, 112, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
         conv1 = conv2d(se_layer1, kernel1) + biases1
