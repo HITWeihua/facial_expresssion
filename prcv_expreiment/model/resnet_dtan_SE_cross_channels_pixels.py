@@ -99,7 +99,7 @@ def Squeeze_excitation_layer_cross_channels_pixels(input_x, input_dim, out_dim, 
         second_dim = 64
 
         squeeze = tf.reduce_mean(input_x, reduction_indices=[3], keep_dims=True)
-        squeeze = tf.nn.avg_pool(squeeze, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
+        # squeeze = tf.nn.avg_pool(squeeze, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
         squeeze = tf.reshape(squeeze, [-1, first_dim])
         weights = weight_variable([first_dim, second_dim], stddev=0.1, name='weights', wd=0.01)
         # biases = bias_variable([64], name='biases')
