@@ -3,6 +3,7 @@ import tensorflow as tf
 
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
+
 CK_NUM_CLASSES = 8
 CK_SIMPLE_NUM = 6
 CK_LANDMARKS_LENGTH = 68*2*CK_SIMPLE_NUM
@@ -10,6 +11,11 @@ CK_LANDMARKS_LENGTH = 68*2*CK_SIMPLE_NUM
 OULU_NUM_CLASSES = 6
 OULU_SIMPLE_NUM = 7
 OULU_LANDMARKS_LENGTH = 68*2*OULU_SIMPLE_NUM
+
+MMI_NUM_CLASSES = 6
+MMI_SIMPLE_NUM = 15
+MMI_LANDMARKS_LENGTH = 68*2*MMI_SIMPLE_NUM
+
 ACTIVATION = tf.nn.relu
 
 
@@ -84,14 +90,14 @@ def variable_summaries(var, name, is_conv=False):
 def inference(images, keep_prob, is_train):
     # conv1
     with tf.variable_scope('dtan_conv1'):
-        kernel = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
+        kernel = weight_variable([5, 5, MMI_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel) + biases
         conv1_bn = batch_norm(conv1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
         # variable_summaries(conv1)
         # variable_summaries(conv1_bn)
-        variable_summaries(conv1_activation, "conv1")
+        # variable_summaries(conv1_activation, "conv1")
     # pool1
     with tf.variable_scope('dtan_pool1'):
         pool1 = max_pool_2x2(conv1_activation)  # 32*32
@@ -105,7 +111,7 @@ def inference(images, keep_prob, is_train):
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
         # variable_summaries(conv2)
         # variable_summaries(conv2_bn)
-        variable_summaries(conv2_activation, "conv2")
+        # variable_summaries(conv2_activation, "conv2")
 
     # pool2
     with tf.variable_scope('dtan_pool2'):
@@ -117,7 +123,7 @@ def inference(images, keep_prob, is_train):
         weights = weight_variable([16 * 16 * 64, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases)
-        variable_summaries(fc_1, 'fc1')
+        # variable_summaries(fc_1, 'fc1')
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
@@ -125,13 +131,13 @@ def inference(images, keep_prob, is_train):
         weights = weight_variable([500, 500], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([500], name='biases')
         fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        variable_summaries(fc_2, 'fc2')
+        # variable_summaries(fc_2, 'fc2')
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
     with tf.variable_scope('dtan_fc3_ep'):
-        weights = weight_variable([500, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([OULU_NUM_CLASSES], name='biases')
+        weights = weight_variable([500, MMI_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+        biases = bias_variable([MMI_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc2_drop, weights) + biases
 
     return fe_logits
@@ -149,8 +155,8 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    1000,
-                                    0.3,  # 0.96
+                                    800,
+                                    0.9,  # 0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

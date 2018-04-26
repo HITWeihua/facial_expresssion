@@ -11,7 +11,9 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtan as model
+# from prcv_expreiment.model import resnet_dtan_v2 as model
+from prcv_expreiment.model import resnet_dtan_v2_mmi as model
+# from prcv_expreiment.model import image_sepreate as model #
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -209,8 +211,8 @@ def main(_):
                 train_file = file_name
         train_tfrecord_path = os.path.join(test_train_dir, train_file)
         test_tfrecord_path = os.path.join(test_train_dir, test_file)
-        test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])  # ck
-        # test_batch_size = 48  # oulu
+        test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
+        # test_batch_size = 48
         train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
         train_correct.append(train)
         test_correct.append(test)
@@ -239,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=2500,
+        default=3000,
         help='max steps initial 3000.'
 
     )
