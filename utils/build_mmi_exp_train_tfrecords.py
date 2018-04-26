@@ -149,7 +149,7 @@ if __name__ == '__main__':
         total_samples = 0
         start_time = time.time()
 
-        writer = tf.python_io.TFRecordWriter("../mmi/mmi_images/{}/mmi_images_test_{}.tfrecords".format(str(tf_num), str(tf_num)))  # 要生成的文件
+        writer = tf.python_io.TFRecordWriter("../mmi/mmi_images/{}/mmi_images_train_{}.tfrecords".format(str(tf_num), str(tf_num)))  # 要生成的文件
 
         with open("../mmi/label.txt", 'r') as f:
             label_list = f.readlines()
@@ -159,6 +159,8 @@ if __name__ == '__main__':
         people_list = []
         for i in range(len(all_people_list)):
             if i % 10 == tf_num:
+                pass
+            else:
                 people_list.append(all_people_list[i])
 
         print(people_list)
@@ -191,16 +193,15 @@ if __name__ == '__main__':
                 # angles = [-15, -10, -5, 0, 5, 10, 15]
                 # for angle in angles:
                 assert len(image_names) == 15, "images files number not equal to 15. files: {}".format(image_names_path)
-                # landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False, add_noise=False, rotation=0)
-                images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0)
-                concat_and_write2file(images_vec, lable_vec)
+                angles = [-15, -10, -5, 0, 5, 10, 15]
+                for angle in angles:
+                    images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=angle)
+                    concat_and_write2file(images_vec, lable_vec)
 
-                # landmarks_vec = preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=True, add_noise=False, rotation=False)
-                # images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=True, angle=0)
-                # concat_and_write2file(images_vec, landmarks_vec, lable_vec)
+                    images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=True, angle=angle)
+                    concat_and_write2file(images_vec, lable_vec)
 
-
-                total_samples += 1
+                total_samples += 14
                 # print(total_samples)
 
         print("fold:{} total_samples:{}".format(tf_num, total_samples))
