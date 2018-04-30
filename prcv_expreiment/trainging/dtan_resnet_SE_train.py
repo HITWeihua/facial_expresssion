@@ -14,7 +14,8 @@ print(os.path.abspath('.'))
 
 # from prcv_expreiment.model import resnet_dtan_SE as model
 # from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
-from prcv_expreiment.model import resnet_dtan_SECC_combine as model
+# from prcv_expreiment.model import resnet_dtan_SECC_combine as model
+from prcv_expreiment.model import resnet_dtan_SE_input as model
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
