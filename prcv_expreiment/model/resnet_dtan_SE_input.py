@@ -116,9 +116,10 @@ def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, 
 def inference(images, keep_prob, is_train):
     # conv1
     with tf.variable_scope('block1'):
+        se_layer0 = Squeeze_excitation_layer(images, 64, 64, 1, "se0")
         kernel1 = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
-        conv1 = conv2d(images, kernel1) + biases1
+        conv1 = conv2d(se_layer0, kernel1) + biases1
         conv1_bn = batch_norm(conv1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
 
