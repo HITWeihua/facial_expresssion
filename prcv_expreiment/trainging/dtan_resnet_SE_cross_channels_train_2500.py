@@ -13,7 +13,9 @@ sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
 
 # from prcv_expreiment.model import resnet_dtan_SE as model
-from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
+# from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
+from prcv_expreiment.model import resnet_dtan_SE_cross_channels_ck as model
+
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
@@ -27,9 +29,9 @@ def placeholder_inputs():
     # images_placeholders = []
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
-    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
+    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.CK_SIMPLE_NUM])
     # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
-    labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
+    labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.CK_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
     return images_placeholder, labels_placeholder, keep_prob, is_train
@@ -56,12 +58,12 @@ def read_and_decode(filename):
     print('read train data.')
     features = tf.parse_single_example(serialized_example,
                                        features={
-                                           'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
+                                           'label': tf.FixedLenFeature([model.CK_NUM_CLASSES], tf.float32),
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
+    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.CK_SIMPLE_NUM])
+    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.CK_SIMPLE_NUM])
     # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return images, label
@@ -75,12 +77,12 @@ def read_and_decode_4_test(filename):
     print('read test data.')
     features = tf.parse_single_example(serialized_example,
                                        features={
-                                           'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
+                                           'label': tf.FixedLenFeature([model.CK_NUM_CLASSES], tf.float32),
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
+    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.CK_SIMPLE_NUM])
+    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.CK_SIMPLE_NUM])
     # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return images, label
@@ -196,7 +198,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_el_joint_old"
+    base_path = "/home/duheran/facial_expresssion/ck_el_joint_new"
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -209,8 +211,8 @@ def main(_):
                 train_file = file_name
         train_tfrecord_path = os.path.join(test_train_dir, train_file)
         test_tfrecord_path = os.path.join(test_train_dir, test_file)
-        # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
-        test_batch_size = 48
+        test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
+        # test_batch_size = 48
         train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
         train_correct.append(train)
         test_correct.append(test)
