@@ -81,14 +81,14 @@ def variable_summaries(var):
 def Squeeze_excitation_layer(input_x, input_dim, out_dim, ratio, layer_name):
     with tf.variable_scope(layer_name):
         squeeze = tf.nn.avg_pool(input_x, ksize=[1, input_dim, input_dim, 1], strides=[1, 2, 2, 1], padding='VALID')
-        squeeze = tf.reshape(squeeze, [-1, 64])
-        weights = weight_variable([64, 64], stddev=0.1, name='weights', wd=0.01)
+        squeeze = tf.reshape(squeeze, [-1, out_dim])
+        weights = weight_variable([out_dim, 64], stddev=0.1, name='weights', wd=0.01)
         # biases = bias_variable([64], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(squeeze, weights))
-        weights2 = weight_variable([64, 64], stddev=0.1, name='weights', wd=0.01)
+        weights2 = weight_variable([64, out_dim], stddev=0.1, name='weights', wd=0.01)
         fc_2 = tf.nn.sigmoid(tf.matmul(fc_1, weights2))
 
-        excitation = tf.reshape(fc_2, [-1, 1, 1, 64])
+        excitation = tf.reshape(fc_2, [-1, 1, 1, out_dim])
         scale = input_x * excitation
         return scale
 
@@ -116,7 +116,7 @@ def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, 
 def inference(images, keep_prob, is_train):
     # conv1
     with tf.variable_scope('block1'):
-        se_layer0 = Squeeze_excitation_layer(images, 64, 64, 1, "se0")
+        se_layer0 = Squeeze_excitation_layer(images, 64, 7, 1, "se0")
         kernel1 = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
         conv1 = conv2d(se_layer0, kernel1) + biases1
