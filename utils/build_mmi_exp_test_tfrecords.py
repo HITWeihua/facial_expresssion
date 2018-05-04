@@ -99,7 +99,7 @@ def preprocess_data_without_01(lable_vec, landmarks_names_path, landmark_names, 
 
 
 def write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0):
-    express_array = np.zeros((64, 64, 15))
+    express_array = np.zeros((64, 64, 7))
     index = 0
     for image_name in image_names:
         image_path = os.path.join(image_names_path, image_name)
@@ -125,7 +125,7 @@ def concat_and_write2file(images_vec, lable_vec):
     img_landmarks_raw = []
     img_landmarks_raw.extend(images_vec)
     # img_landmarks_raw.extend(landmarks_vec)  # 64*64*7+68*2*7=29624
-    assert len(img_landmarks_raw) == 61440, "length not equal. img_landmarks_raw: {}".format(len(img_landmarks_raw))
+    assert len(img_landmarks_raw) == 28672, "length not equal. img_landmarks_raw: {}".format(len(img_landmarks_raw))
     example = tf.train.Example(features=tf.train.Features(feature={
         "label": tf.train.Feature(float_list=tf.train.FloatList(value=lable_vec)),
         'img_landmarks_raw': tf.train.Feature(float_list=tf.train.FloatList(value=img_landmarks_raw))
