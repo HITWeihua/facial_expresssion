@@ -99,7 +99,7 @@ def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, 
         second_dim = int(first_dim / ratio)
 
         squeeze = tf.reduce_mean(input_x, reduction_indices=[3], keep_dims=True)
-        squeeze = tf.nn.avg_pool(squeeze, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
+        squeeze = tf.nn.max_pool(squeeze, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
         squeeze = tf.reshape(squeeze, [-1, first_dim])
         weights = weight_variable([first_dim, second_dim], stddev=0.1, name='weights', wd=0.01)
         # biases = bias_variable([64], name='biases')
@@ -190,15 +190,15 @@ def inference(images, keep_prob, is_train):
         pool3 = tf.nn.max_pool(add_layer3_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
     with tf.variable_scope('block5'):
-        kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases7 = bias_variable([64], name='biases')
-        conv7 = conv2d(pool3, kernel7) + biases7
-        conv7_bn = batch_norm(conv7, 64, is_train)
-        conv7_activation = ACTIVATION(conv7_bn, name='activate')  # 64*64
-
         kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
         biases8 = bias_variable([64], name='biases')
-        conv8 = conv2d(conv7_activation, kernel8) + biases8
+        conv8 = conv2d(pool3, kernel8) + biases8
+        conv8_bn = batch_norm(conv8, 64, is_train)
+        conv8_activation = ACTIVATION(conv8_bn, name='activate')  # 64*64
+
+        kernel9 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
+        biases9 = bias_variable([64], name='biases')
+        conv9 = conv2d(conv8_activation, kernel9) + biases9
 
         se_layer4 = Squeeze_excitation_layer_cross_channels(conv8, 8, 64, 1, "se4")
         add_layer4 = tf.add(se_layer4, pool3)

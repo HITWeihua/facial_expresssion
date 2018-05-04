@@ -135,7 +135,7 @@ def inference(images, keep_prob, is_train):
         conv3 = conv2d(conv2_activation, kernel3) + biases3
 
         se_layer1 = Squeeze_excitation_layer(conv3, 64, 64, 1, "se1")
-        se_layer1 = Squeeze_excitation_layer_cross_channels(se_layer1, 64, 64, 16, "se1")
+        # se_layer1 = Squeeze_excitation_layer_cross_channels(se_layer1, 64, 64, 16, "se1")
         add_layer1 = tf.add(se_layer1, conv1_activation)
 
         add_layer1_bn = batch_norm(add_layer1, 64, is_train)
@@ -159,7 +159,7 @@ def inference(images, keep_prob, is_train):
         conv5 = conv2d(conv4_activation, kernel5) + biases5
 
         se_layer2 = Squeeze_excitation_layer(conv5, 32, 64, 1, "se2")
-        se_layer2 = Squeeze_excitation_layer_cross_channels(se_layer2, 32, 64, 4, "se2")
+        # se_layer2 = Squeeze_excitation_layer_cross_channels(se_layer2, 32, 64, 4, "se2")
         add_layer2 = tf.add(se_layer2, pool1)
 
         add_layer2_bn = batch_norm(add_layer2, 64, is_train)
@@ -182,7 +182,7 @@ def inference(images, keep_prob, is_train):
         conv7 = conv2d(conv6_activation, kernel7) + biases7
 
         se_layer3 = Squeeze_excitation_layer(conv7, 16, 64, 1, "se3")
-        se_layer3 = Squeeze_excitation_layer_cross_channels(se_layer3, 16, 64, 1, "se3")
+        # se_layer3 = Squeeze_excitation_layer_cross_channels(se_layer3, 16, 64, 1, "se3")
         add_layer3 = tf.add(se_layer3, pool2)
 
         add_layer3_bn = batch_norm(add_layer3, 64, is_train)
@@ -205,7 +205,7 @@ def inference(images, keep_prob, is_train):
         conv8 = conv2d(conv7_activation, kernel8) + biases8
 
         se_layer4 = Squeeze_excitation_layer(conv8, 8, 64, 1, "se4")
-        se_layer4 = Squeeze_excitation_layer_cross_channels(se_layer4, 8, 64, 1, "se4")
+        # se_layer4 = Squeeze_excitation_layer_cross_channels(se_layer4, 8, 64, 1, "se4")
         add_layer4 = tf.add(se_layer4, pool3)
 
         add_layer4_bn = batch_norm(add_layer4, 64, is_train)

@@ -12,7 +12,7 @@ OULU_SIMPLE_NUM = 7
 OULU_LANDMARKS_LENGTH = 68*2*OULU_SIMPLE_NUM
 
 MMI_NUM_CLASSES = 6
-MMI_SIMPLE_NUM = 15
+MMI_SIMPLE_NUM = 7
 MMI_LANDMARKS_LENGTH = 68*2*MMI_SIMPLE_NUM
 
 ACTIVATION = tf.nn.relu
@@ -87,26 +87,26 @@ def variable_summaries(var):
 def inference(images, keep_prob, is_train):
     # conv1
     with tf.variable_scope('block1'):
-        kernel1 = weight_variable([5, 5, MMI_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
-        biases1 = bias_variable([64], name='biases')
+        kernel1 = weight_variable([5, 5, MMI_SIMPLE_NUM, 16], stddev=0.1, name='weights', wd=0.0)
+        biases1 = bias_variable([16], name='biases')
         conv1 = conv2d(images, kernel1) + biases1
-        conv1_bn = batch_norm(conv1, 64, is_train)
+        conv1_bn = batch_norm(conv1, 16, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
 
     with tf.variable_scope('block2'):
-        kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases2 = bias_variable([64], name='biases')
+        kernel2 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases2 = bias_variable([16], name='biases')
         conv2 = conv2d(conv1_activation, kernel2) + biases2
-        conv2_bn = batch_norm(conv2, 64, is_train)
+        conv2_bn = batch_norm(conv2, 16, is_train)
         conv2_activation = ACTIVATION(conv2_bn, name='activate')  # 64*64
 
-        kernel3 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases3 = bias_variable([64], name='biases')
+        kernel3 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases3 = bias_variable([16], name='biases')
         conv3 = conv2d(conv2_activation, kernel3) + biases3
 
         add_layer1 = tf.add(conv3, conv1_activation)
 
-        add_layer1_bn = batch_norm(add_layer1, 64, is_train)
+        add_layer1_bn = batch_norm(add_layer1, 16, is_train)
         add_layer1_activation = ACTIVATION(add_layer1_bn, name='activate')  # 64*64
         # variable_summaries(add_layer1_activation)
 
@@ -116,19 +116,19 @@ def inference(images, keep_prob, is_train):
 
     # conv2
     with tf.variable_scope('block3'):
-        kernel4 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases4 = bias_variable([64], name='biases')
+        kernel4 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases4 = bias_variable([16], name='biases')
         conv4 = conv2d(pool1, kernel4) + biases4
-        conv4_bn = batch_norm(conv4, 64, is_train)
+        conv4_bn = batch_norm(conv4, 16, is_train)
         conv4_activation = ACTIVATION(conv4_bn, name='activate')  # 64*64
 
-        kernel5 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases5 = bias_variable([64], name='biases')
+        kernel5 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases5 = bias_variable([16], name='biases')
         conv5 = conv2d(conv4_activation, kernel5) + biases5
 
         add_layer2 = tf.add(conv5, pool1)
 
-        add_layer2_bn = batch_norm(add_layer2, 64, is_train)
+        add_layer2_bn = batch_norm(add_layer2, 16, is_train)
         add_layer2_activation = ACTIVATION(add_layer2_bn, name='activate')  # 64*64
         # variable_summaries(add_layer2_activation)
 
@@ -137,19 +137,19 @@ def inference(images, keep_prob, is_train):
         pool2 = tf.nn.max_pool(add_layer2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
     with tf.variable_scope('block4'):
-        kernel6 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases6 = bias_variable([64], name='biases')
+        kernel6 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases6 = bias_variable([16], name='biases')
         conv6 = conv2d(pool2, kernel6) + biases6
-        conv6_bn = batch_norm(conv6, 64, is_train)
+        conv6_bn = batch_norm(conv6, 16, is_train)
         conv6_activation = ACTIVATION(conv6_bn, name='activate')  # 64*64
 
-        kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases7 = bias_variable([64], name='biases')
+        kernel7 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases7 = bias_variable([16], name='biases')
         conv7 = conv2d(conv6_activation, kernel7) + biases7
 
         add_layer3 = tf.add(conv7, pool2)
 
-        add_layer3_bn = batch_norm(add_layer3, 64, is_train)
+        add_layer3_bn = batch_norm(add_layer3, 16, is_train)
         add_layer3_activation = ACTIVATION(add_layer3_bn, name='activate')  # 64*64
         # variable_summaries(add_layer3_activation)
 
@@ -158,19 +158,19 @@ def inference(images, keep_prob, is_train):
         pool3 = tf.nn.max_pool(add_layer3_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
     with tf.variable_scope('block5'):
-        kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases7 = bias_variable([64], name='biases')
+        kernel7 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases7 = bias_variable([16], name='biases')
         conv7 = conv2d(pool3, kernel7) + biases7
-        conv7_bn = batch_norm(conv7, 64, is_train)
+        conv7_bn = batch_norm(conv7, 16, is_train)
         conv7_activation = ACTIVATION(conv7_bn, name='activate')  # 64*64
 
-        kernel8 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
-        biases8 = bias_variable([64], name='biases')
+        kernel8 = weight_variable([5, 5, 16, 16], stddev=0.1, name='weights', wd=0.0)
+        biases8 = bias_variable([16], name='biases')
         conv8 = conv2d(conv7_activation, kernel8) + biases8
 
         add_layer4 = tf.add(conv8, pool3)
 
-        add_layer4_bn = batch_norm(add_layer4, 64, is_train)
+        add_layer4_bn = batch_norm(add_layer4, 16, is_train)
         add_layer4_activation = ACTIVATION(add_layer4_bn, name='activate')  # 64*64
         # variable_summaries(add_layer4_activation)
 
@@ -180,12 +180,12 @@ def inference(images, keep_prob, is_train):
 
 
     # fc1
-    h_pool4_flat = tf.reshape(pool4, [-1, 4 * 4 * 64])
+    h_pool4_flat = tf.reshape(pool4, [-1, 4 * 4 * 16])
     with tf.variable_scope('fc1'):
-        weights = weight_variable([4 * 4 * 64, 512], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([4 * 4 * 16, 512], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([512], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
-        variable_summaries(fc_1)
+        # variable_summaries(fc_1)
         fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
@@ -218,7 +218,7 @@ def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
                                     1000,
-                                    0.3,
+                                    0.1,
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

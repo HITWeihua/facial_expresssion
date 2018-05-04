@@ -59,11 +59,11 @@ def read_and_decode(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.MMI_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([61440], tf.float32),
+                                           'img_landmarks_raw': tf.FixedLenFeature([28672], tf.float32),
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.MMI_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.MMI_SIMPLE_NUM])
+    # images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.MMI_SIMPLE_NUM])
+    images = tf.reshape(img, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.MMI_SIMPLE_NUM])
     # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return images, label
@@ -78,11 +78,11 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.MMI_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([61440], tf.float32),  # 24576+816=29624
+                                           'img_landmarks_raw': tf.FixedLenFeature([28672], tf.float32),  # 24576+816=29624
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
-    images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.MMI_SIMPLE_NUM])
-    images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.MMI_SIMPLE_NUM])
+    # images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.MMI_SIMPLE_NUM])
+    images = tf.reshape(img, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.MMI_SIMPLE_NUM])
     # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
     label = tf.cast(features['label'], tf.float32)
     return images, label
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=3000,
+        default=900,
         help='max steps initial 3000.'
 
     )

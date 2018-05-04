@@ -13,9 +13,9 @@ sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
 
 # from prcv_expreiment.model import resnet_dtan_SE as model
-# from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
+from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
 # from prcv_expreiment.model import resnet_dtan_SECC_combine as model
-from prcv_expreiment.model import resnet_dtan_SE_input as model
+# from prcv_expreiment.model import resnet_dtan_SE_input as model
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
@@ -126,7 +126,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.

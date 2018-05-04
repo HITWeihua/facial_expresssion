@@ -82,18 +82,19 @@ def res_block(input_layer, is_train, channels):
     kernel1 = weight_variable([5, 5, channels, channels], stddev=0.1, name='weights', wd=0.0)
     biases1 = bias_variable([channels], name='biases')
     conv1 = conv2d(input_layer, kernel1) + biases1
-    conv1_bn = batch_norm(conv1, channels, is_train)
-    conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
+    # conv1_bn = batch_norm(conv1, channels, is_train)
+    # conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
+    #
+    # kernel2 = weight_variable([5, 5, channels, channels], stddev=0.1, name='weights', wd=0.0)
+    # biases2 = bias_variable([channels], name='biases')
+    # conv2 = conv2d(conv1_activation, kernel2) + biases2
 
-    kernel2 = weight_variable([5, 5, channels, channels], stddev=0.1, name='weights', wd=0.0)
-    biases2 = bias_variable([channels], name='biases')
-    conv2 = conv2d(conv1_activation, kernel2) + biases2
-
-    add_layer = tf.add(conv2, input_layer)
+    # add_layer = tf.add(conv2, input_layer)
+    add_layer = tf.add(conv1, input_layer)
 
     add_layer_bn = batch_norm(add_layer, channels, is_train)
     add_layer_activation = ACTIVATION(add_layer_bn, name='activate')  # 64*64
-    variable_summaries(add_layer_activation)
+    # variable_summaries(add_layer_activation)
     return add_layer_activation
 
 
@@ -150,7 +151,7 @@ def inference(images, keep_prob, is_train):
         weights = weight_variable([4 * 4 * 64, 512], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([512], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
-        variable_summaries(fc_1)
+        # variable_summaries(fc_1)
         fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
@@ -182,7 +183,7 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    1000,
+                                    800,
                                     0.3,
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
