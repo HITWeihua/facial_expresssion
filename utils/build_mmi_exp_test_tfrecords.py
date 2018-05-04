@@ -174,8 +174,8 @@ if __name__ == '__main__':
                 image_names_path = os.path.join(people_dir_path, express_list[num])
                 # lable_path = os.path.join(lable_path_people, express_list[num])
                 # landmark_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.txt' in x]
-                image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.jpg' in x]
-
+                # image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.jpg' in x]
+                image_names = ['0_0.jpg', '0_3.jpg', '0_6.jpg', '0_8.jpg', '0_10.jpg', '0_12.jpg', '0_14.jpg']
                 lable_value = int(label_dict[people+'-'+express_list[num]])
                 lable_vec = np.zeros((6))
                 lable_vec[lable_value-1] = 1
@@ -190,7 +190,7 @@ if __name__ == '__main__':
                 # landmark_names = average_sampling(landmark_names)
                 # angles = [-15, -10, -5, 0, 5, 10, 15]
                 # for angle in angles:
-                assert len(image_names) == 15, "images files number not equal to 15. files: {}".format(image_names_path)
+                assert len(image_names) == 7, "images files number not equal to 15. files: {}".format(image_names_path)
                 # landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False, add_noise=False, rotation=0)
                 images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0)
                 concat_and_write2file(images_vec, lable_vec)
