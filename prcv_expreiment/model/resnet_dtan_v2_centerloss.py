@@ -33,11 +33,12 @@ def get_center_loss(features, labels, alpha, num_classes):
     centers = tf.get_variable('centers', [num_classes, len_features], dtype=tf.float32,
                               initializer=tf.constant_initializer(0), trainable=False)
     # 将label展开为一维的，输入如果已经是一维的，则该动作其实无必要
-    # labels = tf.reshape(labels, [-1])
+    labels = tf.argmax(labels, 1)
+    labels = tf.reshape(labels, [-1])
 
     # 根据样本label,获取mini-batch中每一个样本对应的中心值
-    # centers_batch = tf.gather(centers, labels)
-    centers_batch = tf.matmul(labels, centers)
+    centers_batch = tf.gather(centers, labels)
+    # centers_batch = tf.matmul(labels, centers)
     # 计算loss
     loss = tf.nn.l2_loss(features - centers_batch)
 
@@ -246,7 +247,7 @@ def inference(images, keep_prob, is_train):
 
 
 def loss(logits, labels_placeholder, features, ratio=0.5):
-    labels = tf.to_int64(labels_placeholder)
+    labels = tf.to_float(labels_placeholder)
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
     center_loss, centers, centers_update_op = get_center_loss(features, labels, 0.5, 6)
