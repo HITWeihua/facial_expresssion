@@ -33,11 +33,11 @@ def get_center_loss(features, labels, alpha, num_classes):
     centers = tf.get_variable('centers', [num_classes, len_features], dtype=tf.float32,
                               initializer=tf.constant_initializer(0), trainable=False)
     # 将label展开为一维的，输入如果已经是一维的，则该动作其实无必要
-    labels = tf.map_fn(lambda x: x.index(1), labels, dtype=tf.int64)
-    labels = tf.reshape(labels, [-1])
+    # labels = tf.reshape(labels, [-1])
 
     # 根据样本label,获取mini-batch中每一个样本对应的中心值
-    centers_batch = tf.gather(centers, labels)
+    # centers_batch = tf.gather(centers, labels)
+    centers_batch = tf.matmul(labels, centers)
     # 计算loss
     loss = tf.nn.l2_loss(features - centers_batch)
 
