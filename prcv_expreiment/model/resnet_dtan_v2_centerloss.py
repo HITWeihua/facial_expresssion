@@ -53,7 +53,7 @@ def get_center_loss(features, labels, alpha, num_classes):
     diff = diff / tf.cast((1 + appear_times), tf.float32)
     diff = alpha * diff
 
-    centers_update_op = tf.scatter_sub(centers, labels, diff)
+    centers_update_op = tf.scatter_sub(centers, tf.to_int32(labels), diff)
 
     return loss, centers, centers_update_op
 
@@ -246,11 +246,11 @@ def inference(images, keep_prob, is_train):
     return fe_logits, feature
 
 
-def loss(logits, labels_placeholder, features, ratio=0.5):
+def loss(logits, labels_placeholder, features, ratio=0.001):
     labels = tf.to_float(labels_placeholder)
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
-    center_loss, centers, centers_update_op = get_center_loss(features, labels, 0.5, 6)
+    center_loss, centers, centers_update_op = get_center_loss(features, labels, 0.3, 6)
     total_loss = xentropy_mean + ratio * center_loss
     tf.add_to_collection('losses', total_loss)
     tf.summary.scalar('xentropy_mean', xentropy_mean)

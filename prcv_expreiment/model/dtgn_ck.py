@@ -89,10 +89,10 @@ def variable_summaries(var, name, is_conv=False):
 
 def inference(landmarks, keep_prob, is_train):
     with tf.variable_scope('dtgn_fc1'):
-        weights = weight_variable([OULU_LANDMARKS_LENGTH, 100], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([CK_LANDMARKS_LENGTH, 100], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([100], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
-        variable_summaries(fc_1, 'fc1')
+        # variable_summaries(fc_1, 'fc1')
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
@@ -100,13 +100,13 @@ def inference(landmarks, keep_prob, is_train):
         weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([600], name='biases')
         fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        variable_summaries(fc_2, 'fc2')
+        # variable_summaries(fc_2, 'fc2')
         fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
     with tf.variable_scope('dtgn_fc3_ep'):
-        weights = weight_variable([600, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([OULU_NUM_CLASSES], name='biases')
+        weights = weight_variable([600, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+        biases = bias_variable([CK_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc2_drop, weights) + biases
 
     return fe_logits
@@ -124,7 +124,7 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    15000,
+                                    10000,
                                     0.1,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
