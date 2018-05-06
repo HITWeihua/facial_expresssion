@@ -12,15 +12,15 @@ def add_gaussian_noise(landmarks):
 
 
 def rotaiton_coordinate(landmarks, rotation):
-    # theata = np.random.random()*(np.pi/5)-(np.pi/10)
-    theata = -rotation * np.pi / 180
+    theata = np.random.random()*(np.pi/5)-(np.pi/10)
+    # theata = -rotation * np.pi / 180
+    # for i in range(len(landmarks)):
+    #     a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(
+    #         (landmarks[i][0] - 32, landmarks[i][1] - 32)).T
+    #     landmarks[i] = (float(a[0] + 32), float(a[1] + 32))
     for i in range(len(landmarks)):
-        a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(
-            (landmarks[i][0] - 32, landmarks[i][1] - 32)).T
-        landmarks[i] = (float(a[0] + 32), float(a[1] + 32))
-    # for i in landmarks:
-    #     a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat(i).T
-    #     i = (float(a[0]), float(a[1]))
+        a = np.mat([[np.cos(theata), -np.sin(theata)], [np.sin(theata), np.cos(theata)]]) * np.mat((landmarks[i][0], landmarks[i][1])).T
+        landmarks[i] = (float(a[0]), float(a[1]))
     return landmarks
 
 
@@ -42,8 +42,9 @@ def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=
         landmark_path = os.path.join(landmarks_names_path, landmark_name)
         with open(landmark_path, 'r') as f:
             landmarks = f.readlines()
-        landmarks = [re.split(r'[\(\)\,\n]+', x) for x in landmarks]
-        landmarks = [(float(x[1]), float(x[2])) for x in landmarks]
+        # landmarks = [re.split(r'[\(\)\,\n]+', x) for x in landmarks]
+        landmarks = [x.strip().split('  ') for x in landmarks]
+        landmarks = [(float(x[0]), float(x[1])) for x in landmarks]
         # landmarks = [(round(float(x[0]), 2), round(float(x[1]), 2)) for x in landmarks]
         nose_x = landmarks[30][0]
         nose_y = landmarks[30][1]
@@ -104,7 +105,7 @@ def concat_and_write2file(images_vec, landmarks_vec, lable_vec):
 
 image_base_path = "F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_sampling"
 lable_base_path = "F:\\files\\facial_expresssion\\ck\\Emotion_labels\\Emotion"
-# landmarks_base_path = "F:\\files\\joint_fine_tuning\\Landmarks\\Landmarks"
+landmarks_base_path = "F:\\files\\facial_expresssion\\ck\\Landmarks\\Landmarks"
 
 
 # print(people_list)
@@ -124,18 +125,19 @@ if __name__ == '__main__':
         people_list = [x.strip() for x in subject_list if '.DS' not in x]
 
         for people in people_list:
-            # landmarks_people_dir_path = os.path.join(landmarks_base_path, people)
+            landmarks_people_dir_path = os.path.join(landmarks_base_path, people)
             emotion_people_dir_path = os.path.join(image_base_path, people)
 
             lable_path_people = os.path.join(lable_base_path, people)
             express_list = [x for x in os.listdir(emotion_people_dir_path) if '.DS' not in x]
 
             for expression in express_list:
-                # landmarks_names_path = os.path.join(emotion_people_dir_path, expression)
+                landmarks_names_path = os.path.join(landmarks_people_dir_path, expression)
                 image_names_path = os.path.join(emotion_people_dir_path, expression)
                 lable_path = os.path.join(lable_path_people, expression)
-                landmark_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.txt' in x]
                 image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.png' in x]
+                landmark_names = [x.replace('.txt', '_landmarks.txt') for x in os.listdir(image_names_path) if '.DS' not in x and '.txt' in x]
+                # landmark_names = [x.replace('.txt', '_landmarks.txt') for x in os.listdir(image_names_path)]
                 if os.path.isdir(lable_path):
                     lable_file = [x for x in os.listdir(lable_path)]
                 else:
@@ -148,11 +150,12 @@ if __name__ == '__main__':
                     with open(os.path.join(lable_path, lable_file), "r") as f:
                         lable_value = float(f.readline())
                     lable_vec = np.zeros((8))
-                    for i in range(len(lable_vec)):
-                        if abs(i - lable_value) < 0.1:
-                            lable_vec[i] = 1
-                        else:
-                            lable_vec[i] = 0
+                    lable_vec[int(lable_value)] = 1
+                    # for i in range(len(lable_vec)):
+                    #     if abs(i - lable_value) < 0.1:
+                    #         lable_vec[i] = 1
+                    #     else:
+                    #         lable_vec[i] = 0
                     # print(lable_value)
                     # print(lable_vec)
 
@@ -160,7 +163,7 @@ if __name__ == '__main__':
                     # angles = [-15, -10, -5, 0, 5, 10, 15]
                     # for angle in angles:
                     assert len(landmark_names)+len(image_names) == 12, "files number not equal to 14. files: {}".format(image_names_path)
-                    landmarks_vec = preprocess_data(lable_vec, image_names_path, landmark_names, is_flipped=False, add_noise=False, rotation=0)
+                    landmarks_vec = preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=False, add_noise=False, rotation=0)
                     images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0)
                     concat_and_write2file(images_vec, landmarks_vec, lable_vec)
 
