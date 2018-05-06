@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
 
