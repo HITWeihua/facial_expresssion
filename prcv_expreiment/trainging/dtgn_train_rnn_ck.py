@@ -45,7 +45,7 @@ def fill_feed_dict(ld, l, keep, is_train_value, batch_size, landmarks_placeholde
         labels_placeholder: label_feed,
         keep_prob: keep,
         is_train: is_train_value,
-        batch_size: batch_size_placeholder
+        batch_size_placeholder : batch_size
     }
     return feed_dict
 
