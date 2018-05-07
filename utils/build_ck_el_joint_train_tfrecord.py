@@ -35,8 +35,8 @@ def average_sampling(landmark_names):
 
 
 def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=False, add_noise=False, rotation=0):
-    express_array = np.array([])
-
+    express_array = np.zeros((6, 68, 2))
+    index = 0
     for landmark_name in landmark_names:
         landmark_path = os.path.join(landmarks_names_path, landmark_name)
         with open(landmark_path, 'r') as f:
@@ -54,11 +54,13 @@ def preprocess_data(lable_vec, landmarks_names_path, landmark_names, is_flipped=
             landmarks = rotaiton_coordinate(landmarks, rotation)
         # landmarks = [(round(x[0], 2), round(x[1], 2)) for x in landmarks]
         # landmarks = [(int(x[0]), int(x[1])) for x in landmarks]
-        landmarks = np.array(landmarks).flatten()
-        if add_noise:
-            landmarks = add_gaussian_noise(landmarks)
-
-        express_array = np.hstack((express_array, landmarks))
+        landmarks = np.array(landmarks)  # .flatten()
+        # if add_noise:
+        #     landmarks = add_gaussian_noise(landmarks)
+        # express_array = np.hstack((express_array, landmarks))
+        express_array[index, :, :] = landmarks
+        index += 1
+        # express_array = np.hstack((express_array, landmarks))
 
     landmark_raw = [float(x) for x in express_array.flatten().tolist()]
     lable_vec = [float(x) for x in lable_vec.tolist()]

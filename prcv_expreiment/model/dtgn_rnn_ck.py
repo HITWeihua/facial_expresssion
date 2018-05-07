@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.contrib import rnn
 
 IMAGE_SIZE = 64
 IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
@@ -85,30 +86,81 @@ def variable_summaries(var, name, is_conv=False):
         if is_conv:
             tf.summary.image('image', tf.reshape(var[:, :, :, 0], [-1, 64, 64, 1]))
 
+# RNN structure
+def RNN_LSTM(x, Weights, biases):
+    # RNN 输入 reshape
+    x = tf.reshape(x, [-1, 7, 68*2])
+    # 定义 LSTM cell
+    # cell 中的 dropout
+    def attn_cell():
+        lstm_cell = tf.contrib.rnn.BasicLSTMCell(128)
+        with tf.name_scope('lstm_dropout'):
+            return tf.contrib.rnn.DropoutWrapper(lstm_cell, output_keep_prob=1)
+    # attn_cell = tf.contrib.rnn.DropoutWrapper(lstm_cell, output_keep_prob=keep_prob)
+    # 实现多层 LSTM
+    # [attn_cell() for _ in range(n_layers)]
+    enc_cells = []
+    for i in range(0, 2):
+        enc_cells.append(attn_cell())
+    with tf.name_scope('lstm_cells_layers'):
+        mlstm_cell = tf.contrib.rnn.MultiRNNCell(enc_cells, state_is_tuple=True)
+    # 全零初始化 state
+    _init_state = mlstm_cell.zero_state(64, dtype=tf.float32)
+    # dynamic_rnn 运行网络
+    outputs, states = tf.nn.dynamic_rnn(mlstm_cell, x, initial_state=_init_state, dtype=tf.float32, time_major=False)
+    # 输出
+    #return tf.matmul(outputs[:,-1,:], Weights) + biases
+    return tf.nn.softmax(tf.matmul(outputs[:,-1,:], Weights) + biases)
+
 
 def inference(landmarks, keep_prob, is_train):
-    with tf.variable_scope('dtgn_fc1'):
-        weights = weight_variable([CK_LANDMARKS_LENGTH, 100], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([100], name='biases')
-        fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
-        # variable_summaries(fc_1, 'fc1')
-        # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
+    n_hiddens = 128  # 隐层节点数
+    n_layers = 2  # LSTM layer 层数
 
-    # fc2
-    with tf.variable_scope('dtgn_fc2'):
-        weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([600], name='biases')
-        fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        # variable_summaries(fc_2, 'fc2')
-        fc2_drop = tf.nn.dropout(fc_2, keep_prob)
+    def attn_cell():
+        lstm_cell = tf.contrib.rnn.BasicLSTMCell(n_hiddens)
+        with tf.name_scope('lstm_dropout'):
+            return tf.contrib.rnn.DropoutWrapper(lstm_cell, output_keep_prob=keep_prob)
 
-    # fc3 facial expression
-    with tf.variable_scope('dtgn_fc3_ep'):
-        weights = weight_variable([600, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([CK_NUM_CLASSES], name='biases')
-        fe_logits = tf.matmul(fc2_drop, weights) + biases
+    enc_cells = []
+    for i in range(0, n_layers):
+        enc_cells.append(attn_cell())
+    with tf.name_scope('lstm_cells_layers'):
+        mlstm_cell = tf.contrib.rnn.MultiRNNCell(enc_cells, state_is_tuple=True)
+    # 全零初始化 state
+    _init_state = mlstm_cell.zero_state(64, dtype=tf.float32)
+    # dynamic_rnn 运行网络
+    outputs, states = tf.nn.dynamic_rnn(mlstm_cell, landmarks, initial_state=_init_state, dtype=tf.float32, time_major=False)
+    # 输出
+    weights = weight_variable([n_hiddens, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+    biases = bias_variable([CK_NUM_CLASSES], name='biases')
+    # return tf.matmul(outputs[:,-1,:], Weights) + biases
+    return tf.matmul(outputs[:, -1, :], weights) + biases
 
-    return fe_logits
+
+
+    # with tf.variable_scope('dtgn_fc1'):
+    #     weights = weight_variable([CK_LANDMARKS_LENGTH, 100], stddev=0.1, name='weights', wd=0.01)
+    #     biases = bias_variable([100], name='biases')
+    #     fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
+    #     # variable_summaries(fc_1, 'fc1')
+    #     # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
+    #
+    # # fc2
+    # with tf.variable_scope('dtgn_fc2'):
+    #     weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
+    #     biases = bias_variable([600], name='biases')
+    #     fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
+    #     # variable_summaries(fc_2, 'fc2')
+    #     fc2_drop = tf.nn.dropout(fc_2, keep_prob)
+    #
+    # # fc3 facial expression
+    # with tf.variable_scope('dtgn_fc3_ep'):
+    #     weights = weight_variable([600, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+    #     biases = bias_variable([CK_NUM_CLASSES], name='biases')
+    #     fe_logits = tf.matmul(fc2_drop, weights) + biases
+    #
+    # return fe_logits
 
 
 def loss(logits, labels_placeholder):
