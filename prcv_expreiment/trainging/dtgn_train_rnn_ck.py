@@ -32,7 +32,7 @@ def placeholder_inputs():
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.CK_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
-    batch_size_placeholder = tf.placeholder(tf.int32)
+    batch_size_placeholder = tf.placeholder(tf.int32, [])
     return landmarks_placeholder, labels_placeholder, keep_prob, is_train, batch_size_placeholder
 
 
