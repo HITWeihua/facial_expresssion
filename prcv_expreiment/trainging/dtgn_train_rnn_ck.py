@@ -32,10 +32,11 @@ def placeholder_inputs():
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.CK_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
-    return landmarks_placeholder, labels_placeholder, keep_prob, is_train
+    batch_size_placeholder = tf.placeholder(tf.int32)
+    return landmarks_placeholder, labels_placeholder, keep_prob, is_train, batch_size_placeholder
 
 
-def fill_feed_dict(ld, l, keep, is_train_value, landmarks_placeholder, labels_placeholder, keep_prob, is_train):
+def fill_feed_dict(ld, l, keep, is_train_value, batch_size, landmarks_placeholder, labels_placeholder, keep_prob, is_train, batch_size_placeholder):
 
     images_feed = ld
     label_feed = l
@@ -43,7 +44,8 @@ def fill_feed_dict(ld, l, keep, is_train_value, landmarks_placeholder, labels_pl
         landmarks_placeholder: images_feed,
         labels_placeholder: label_feed,
         keep_prob: keep,
-        is_train: is_train_value
+        is_train: is_train_value,
+        batch_size: batch_size_placeholder
     }
     return feed_dict
 
@@ -100,10 +102,10 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_batch_test, label_batch_test = tf.train.batch([images_test, label_test], batch_size=test_batch_size, capacity=1000)
 
         # Generate placeholders for the images and labels.
-        images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
+        images_placeholder, labels_placeholder, keep_prob, is_train, batch_size_placeholder = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits = model.inference(images_placeholder, keep_prob, is_train, batch_size_placeholder)
 
         # Add to the Graph the Ops for loss calculation.
         loss = model.loss(fe_logits, labels_placeholder)
@@ -139,7 +141,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
             img_test, l_test = sess.run([images_batch_test, label_batch_test])
-            test_feed_dict = fill_feed_dict(img_test, l_test, 1.0, False, images_placeholder, labels_placeholder, keep_prob, is_train)
+            test_feed_dict = fill_feed_dict(img_test, l_test, 1.0, False, test_batch_size, images_placeholder, labels_placeholder, keep_prob, is_train, batch_size_placeholder)
             # Start the training loop.
             last_train_correct = []
             last_test_correct = []
@@ -149,7 +151,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                 # Fill a feed dictionary with the actual set of images and labels
                 # for this particular training step.
                 img, l = sess.run([images_batch, label_batch])
-                feed_dict = fill_feed_dict(img, l, 0.9, True, images_placeholder, labels_placeholder, keep_prob, is_train)
+                feed_dict = fill_feed_dict(img, l, 0.9, True, train_batch_size, images_placeholder, labels_placeholder, keep_prob, is_train, batch_size_placeholder)
 
                 # Run one step of the model.  The return values are the activations
                 # from the `train_op` (which is discarded) and the `loss` Op.  To

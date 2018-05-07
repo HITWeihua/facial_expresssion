@@ -113,9 +113,15 @@ def RNN_LSTM(x, Weights, biases):
     return tf.nn.softmax(tf.matmul(outputs[:,-1,:], Weights) + biases)
 
 
-def inference(landmarks, keep_prob, is_train):
+def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
     n_hiddens = 128  # 隐层节点数
     n_layers = 2  # LSTM layer 层数
+
+
+    # lstm_cell = rnn.BasicLSTMCell(num_units=n_hiddens, forget_bias=1.0, state_is_tuple=True)
+    # lstm_cell = rnn.DropoutWrapper(cell=lstm_cell, input_keep_prob=1.0, output_keep_prob=keep_prob)
+    # mlstm_cell = rnn.MultiRNNCell([lstm_cell] * 2, state_is_tuple=True)
+    # init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
 
     def attn_cell():
         lstm_cell = tf.contrib.rnn.BasicLSTMCell(n_hiddens)
@@ -128,7 +134,7 @@ def inference(landmarks, keep_prob, is_train):
     with tf.name_scope('lstm_cells_layers'):
         mlstm_cell = tf.contrib.rnn.MultiRNNCell(enc_cells, state_is_tuple=True)
     # 全零初始化 state
-    _init_state = mlstm_cell.zero_state(64, dtype=tf.float32)
+    _init_state = mlstm_cell.zero_state(batch_size_placeholder, dtype=tf.float32)
     # dynamic_rnn 运行网络
     outputs, states = tf.nn.dynamic_rnn(mlstm_cell, landmarks, initial_state=_init_state, dtype=tf.float32, time_major=False)
     # 输出
