@@ -198,7 +198,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_el_joint_new"
+    base_path = "/home/duheran/facial_expresssion/oulu_el_joint"
     train_correct = []
     test_correct = []
     # for i in range(10):

@@ -57,9 +57,11 @@ def read_and_decode(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'landmarks_raw': tf.FixedLenFeature([model.OULU_LANDMARKS_LENGTH], tf.float32),
+                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
                                        })
-    landmark = tf.cast(features['landmarks_raw'], tf.float32)
+    img = tf.cast(features['img_landmarks_raw'], tf.float32)
+    landmark = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
+
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -73,9 +75,11 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'landmarks_raw': tf.FixedLenFeature([model.OULU_LANDMARKS_LENGTH], tf.float32),  # 24576+816=29624
+                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
                                        })
-    landmark = tf.cast(features['landmarks_raw'], tf.float32)
+    img = tf.cast(features['img_landmarks_raw'], tf.float32)
+    landmark = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
+
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -118,7 +122,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -193,7 +197,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_landmark"
+    base_path = "/home/duheran/facial_expresssion/oulu_el_joint"
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -236,7 +240,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=30000,
+        default=10000,
         help='max steps initial 3000.'
 
     )

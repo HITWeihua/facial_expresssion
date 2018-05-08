@@ -114,8 +114,8 @@ def RNN_LSTM(x, Weights, biases):
 
 
 def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
-    n_hiddens = 128  # 隐层节点数
-    n_layers = 2  # LSTM layer 层数
+    n_hiddens = 32  # 隐层节点数
+    n_layers = 2 # LSTM layer 层数
 
 
     # lstm_cell = rnn.BasicLSTMCell(num_units=n_hiddens, forget_bias=1.0, state_is_tuple=True)
@@ -124,24 +124,31 @@ def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
     # init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
 
     def attn_cell():
-        lstm_cell = tf.contrib.rnn.BasicLSTMCell(n_hiddens)
+        lstm_cell = tf.contrib.rnn.BasicRNNCell(n_hiddens)
+
         with tf.name_scope('lstm_dropout'):
             return tf.contrib.rnn.DropoutWrapper(lstm_cell, output_keep_prob=keep_prob)
 
     enc_cells = []
+    enc_cells2 = []
     for i in range(0, n_layers):
         enc_cells.append(attn_cell())
+        enc_cells2.append(attn_cell())
     with tf.name_scope('lstm_cells_layers'):
         mlstm_cell = tf.contrib.rnn.MultiRNNCell(enc_cells, state_is_tuple=True)
+        mlstm_cell2 = tf.contrib.rnn.MultiRNNCell(enc_cells2, state_is_tuple=True)
     # 全零初始化 state
     _init_state = mlstm_cell.zero_state(batch_size_placeholder, dtype=tf.float32)
+    _init_state_bw = mlstm_cell2.zero_state(batch_size_placeholder, dtype=tf.float32)
     # dynamic_rnn 运行网络
-    outputs, states = tf.nn.dynamic_rnn(mlstm_cell, landmarks, initial_state=_init_state, dtype=tf.float32, time_major=False)
+    outputs, states = tf.nn.bidirectional_dynamic_rnn(mlstm_cell, mlstm_cell2, landmarks, initial_state_fw=_init_state, initial_state_bw=_init_state_bw,dtype=tf.float32, time_major=False)
     # 输出
-    weights = weight_variable([n_hiddens, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+    outputs = tf.concat(outputs, 2)
+    outputs = tf.transpose(outputs, [1, 0, 2])
+    weights = weight_variable([2*n_hiddens, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
     biases = bias_variable([CK_NUM_CLASSES], name='biases')
     # return tf.matmul(outputs[:,-1,:], Weights) + biases
-    return tf.matmul(outputs[:, -1, :], weights) + biases
+    return tf.matmul(outputs[-1], weights) + biases
 
 
 
@@ -181,8 +188,8 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    10000,
-                                    0.1,  # 0.96  0.3
+                                    3000,
+                                    0.3,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

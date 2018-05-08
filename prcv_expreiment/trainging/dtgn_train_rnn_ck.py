@@ -245,7 +245,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=20000,
+        default=10000,
         help='max steps initial 3000.'
 
     )

@@ -11,7 +11,7 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtgn_ck as model
+from prcv_expreiment.model import dtgn_difference_ck as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -28,7 +28,7 @@ def placeholder_inputs():
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
     # images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.CK_LANDMARKS_LENGTH])
+    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.CK_SIMPLE_NUM, model.CK_LANDMARKS_LENGTH/6])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.CK_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')

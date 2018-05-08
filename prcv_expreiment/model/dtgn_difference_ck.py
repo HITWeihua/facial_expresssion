@@ -102,7 +102,7 @@ def inference(landmarks, keep_prob, is_train):
     with tf.variable_scope('dtgn_fc1'):
         weights = weight_variable([68*2*5, 100], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([100], name='biases')
-        fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
+        fc_1 = tf.nn.relu(tf.matmul(inner_features_concat, weights) + biases)
         # variable_summaries(fc_1, 'fc1')
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
