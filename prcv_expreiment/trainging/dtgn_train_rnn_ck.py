@@ -11,7 +11,8 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtgn_rnn_ck as model
+# from prcv_expreiment.model import dtgn_rnn_ck as model
+from prcv_expreiment.model import dtgn_td_rnn_ck as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 

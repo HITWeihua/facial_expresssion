@@ -121,10 +121,10 @@ def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
                 # inner_features_concat = landmarks[:, i, :]
             elif i == 1:
                 inner_features_concat = landmarks[:, i, :] - landmarks[:, i-1, :]
-                inner_features_concat = tf.reshape(inner_features_concat, [-1, 1, 136])
+                # inner_features_concat = tf.reshape(inner_features_concat, [-1, 1, 136])
             else:
-                inner_features_concat = tf.concat([inner_features_concat, landmarks[:, i, :] - landmarks[:, i-1, :]], axis=-2)
-
+                inner_features_concat = tf.concat([inner_features_concat, landmarks[:, i, :] - landmarks[:, i-1, :]], axis=-1)
+    inner_features_concat = tf.reshape(inner_features_concat, [-1, 5, 136])
     n_hiddens = 32  # 隐层节点数
     n_layers = 2  # LSTM layer 层数
 
@@ -151,7 +151,7 @@ def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
     _init_state = mlstm_cell.zero_state(batch_size_placeholder, dtype=tf.float32)
     _init_state_bw = mlstm_cell2.zero_state(batch_size_placeholder, dtype=tf.float32)
     # dynamic_rnn 运行网络
-    outputs, states = tf.nn.bidirectional_dynamic_rnn(mlstm_cell, mlstm_cell2, landmarks, initial_state_fw=_init_state,
+    outputs, states = tf.nn.bidirectional_dynamic_rnn(mlstm_cell, mlstm_cell2, inner_features_concat, initial_state_fw=_init_state,
                                                       initial_state_bw=_init_state_bw, dtype=tf.float32,
                                                       time_major=False)
     # 输出
