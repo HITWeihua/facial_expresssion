@@ -121,6 +121,7 @@ def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
                 # inner_features_concat = landmarks[:, i, :]
             elif i == 1:
                 inner_features_concat = landmarks[:, i, :] - landmarks[:, i-1, :]
+                inner_features_concat = tf.reshape(inner_features_concat, [-1, 1, 136])
             else:
                 inner_features_concat = tf.concat([inner_features_concat, landmarks[:, i, :] - landmarks[:, i-1, :]], axis=-2)
 
