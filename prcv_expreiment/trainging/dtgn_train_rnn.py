@@ -59,7 +59,7 @@ def read_and_decode(filename):
     print('read train data.')
     features = tf.parse_single_example(serialized_example,
                                        features={
-                                           'label': tf.FixedLenFeature([model.CK_NUM_CLASSES], tf.float32),
+                                           'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
@@ -79,7 +79,7 @@ def read_and_decode_4_test(filename):
     print('read test data.')
     features = tf.parse_single_example(serialized_example,
                                        features={
-                                           'label': tf.FixedLenFeature([model.CK_NUM_CLASSES], tf.float32),
+                                           'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
