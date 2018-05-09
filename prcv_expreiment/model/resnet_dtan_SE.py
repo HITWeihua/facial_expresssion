@@ -77,6 +77,7 @@ def variable_summaries(var):
             # tf.summary.scalar('min', tf.reduce_min(var))
         tf.summary.histogram('histogram', var)
 
+
 def Squeeze_excitation_layer(input_x, input_dim, out_dim, ratio, layer_name):
     with tf.variable_scope(layer_name):
         squeeze = tf.nn.avg_pool(input_x, ksize=[1, input_dim, input_dim, 1], strides=[1, 2, 2, 1], padding='VALID')
@@ -94,14 +95,14 @@ def Squeeze_excitation_layer(input_x, input_dim, out_dim, ratio, layer_name):
 
 def inference(images, keep_prob, is_train):
     # conv1
-    with tf.variable_scope('block1'):
+    with tf.variable_scope('dtan_block1'):
         kernel1 = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel1) + biases1
         conv1_bn = batch_norm(conv1, 64, is_train)
         conv1_activation = ACTIVATION(conv1_bn, name='activate')  # 64*64
 
-    with tf.variable_scope('block2'):
+    with tf.variable_scope('dtan_block2'):
         kernel2 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
         biases2 = bias_variable([64], name='biases')
         conv2 = conv2d(conv1_activation, kernel2) + biases2
@@ -120,11 +121,11 @@ def inference(images, keep_prob, is_train):
         # variable_summaries(add_layer1_activation)
 
     # pool1
-    with tf.variable_scope('pool1'):
+    with tf.variable_scope('dtan_pool1'):
         pool1 = max_pool_2x2(add_layer1_activation)  # 32*32
 
     # conv2
-    with tf.variable_scope('block3'):
+    with tf.variable_scope('dtan_block3'):
         kernel4 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
         biases4 = bias_variable([64], name='biases')
         conv4 = conv2d(pool1, kernel4) + biases4
@@ -143,10 +144,10 @@ def inference(images, keep_prob, is_train):
         # variable_summaries(add_layer2_activation)
 
     # pool2
-    with tf.variable_scope('pool2'):
+    with tf.variable_scope('dtan_pool2'):
         pool2 = tf.nn.max_pool(add_layer2_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
-    with tf.variable_scope('block4'):
+    with tf.variable_scope('dtan_block4'):
         kernel6 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
         biases6 = bias_variable([64], name='biases')
         conv6 = conv2d(pool2, kernel6) + biases6
@@ -165,10 +166,10 @@ def inference(images, keep_prob, is_train):
         # variable_summaries(add_layer3_activation)
 
     # pool2
-    with tf.variable_scope('pool3'):
+    with tf.variable_scope('dtan_pool3'):
         pool3 = tf.nn.max_pool(add_layer3_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
-    with tf.variable_scope('block5'):
+    with tf.variable_scope('dtan_block5'):
         kernel7 = weight_variable([5, 5, 64, 64], stddev=0.1, name='weights', wd=0.0)
         biases7 = bias_variable([64], name='biases')
         conv7 = conv2d(pool3, kernel7) + biases7
@@ -187,13 +188,13 @@ def inference(images, keep_prob, is_train):
         # variable_summaries(add_layer4_activation)
 
     # pool2
-    with tf.variable_scope('pool4'):
+    with tf.variable_scope('dtan_pool4'):
         pool4 = tf.nn.max_pool(add_layer4_activation, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')  # 16*16
 
 
     # fc1
     h_pool4_flat = tf.reshape(pool4, [-1, 4 * 4 * 64])
-    with tf.variable_scope('fc1'):
+    with tf.variable_scope('dtan_fc1'):
         weights = weight_variable([4 * 4 * 64, 512], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([512], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
@@ -209,7 +210,7 @@ def inference(images, keep_prob, is_train):
     #     fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
-    with tf.variable_scope('fc3_ep'):
+    with tf.variable_scope('dtan_fc3_ep'):
         weights = weight_variable([512, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc_1_drop, weights) + biases
