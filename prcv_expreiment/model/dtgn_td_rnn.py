@@ -131,8 +131,8 @@ def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
     # 输出
     outputs = tf.concat(outputs, 2)
     outputs = tf.transpose(outputs, [1, 0, 2])
-    weights = weight_variable([2 * n_hiddens, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
-    biases = bias_variable([CK_NUM_CLASSES], name='biases')
+    weights = weight_variable([2 * n_hiddens, OULU_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
+    biases = bias_variable([OULU_NUM_CLASSES], name='biases')
     # return tf.matmul(outputs[:,-1,:], Weights) + biases
     return tf.matmul(outputs[-1], weights) + biases
 
@@ -173,8 +173,8 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    10000,
-                                    0.3,  # 0.96  0.3
+                                    20000,
+                                    0.1,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

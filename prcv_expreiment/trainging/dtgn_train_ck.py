@@ -11,7 +11,8 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtgn_ck as model
+# from prcv_expreiment.model import dtgn_ck as model
+from prcv_expreiment.model import dtgn_feature_difference_ck as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -123,7 +124,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -241,7 +242,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=20000,
+        default=10000,
         help='max steps initial 3000.'
 
     )

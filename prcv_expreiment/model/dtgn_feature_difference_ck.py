@@ -96,9 +96,9 @@ def block_top(landmarks, is_train):
 
 
 def inference(landmarks, keep_prob, is_train):
-    landmarks = tf.reshape(landmarks, [-1, 7, 68, 2])
+    landmarks = tf.reshape(landmarks, [-1, 6, 68, 2])
     with tf.variable_scope('block_top'):
-        for i in range(OULU_SIMPLE_NUM):
+        for i in range(CK_SIMPLE_NUM):
             if i == 0:
                 frames_features = block_top(landmarks[:, i, :, :], is_train)
                 old_frames_features = frames_features
@@ -112,25 +112,26 @@ def inference(landmarks, keep_prob, is_train):
                 old_frames_features = frames_features
 
     with tf.variable_scope('dtgn_fc1'):
-        weights = weight_variable([32*5, 100], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([100], name='biases')
+        weights = weight_variable([32*5, 600], stddev=0.1, name='weights', wd=0.01)
+        biases = bias_variable([600], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(inner_features_concat, weights) + biases)
+        fc1_drop = tf.nn.dropout(fc_1, keep_prob)
         # variable_summaries(fc_1, 'fc1')
         # fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
-    # fc2
-    with tf.variable_scope('dtgn_fc2'):
-        weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([600], name='biases')
-        fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
-        # variable_summaries(fc_2, 'fc2')
-        fc2_drop = tf.nn.dropout(fc_2, keep_prob)
+    # # fc2
+    # with tf.variable_scope('dtgn_fc2'):
+    #     weights = weight_variable([100, 600], stddev=0.1, name='weights', wd=0.01)
+    #     biases = bias_variable([600], name='biases')
+    #     fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases)
+    #     # variable_summaries(fc_2, 'fc2')
+    #     fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
     with tf.variable_scope('dtgn_fc3_ep'):
         weights = weight_variable([600, CK_NUM_CLASSES], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([CK_NUM_CLASSES], name='biases')
-        fe_logits = tf.matmul(fc2_drop, weights) + biases
+        fe_logits = tf.matmul(fc1_drop, weights) + biases
 
     return fe_logits
 

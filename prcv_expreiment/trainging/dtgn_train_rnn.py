@@ -203,7 +203,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_el_joint" #2018.5.6
+    base_path = "/home/duheran/facial_expresssion/oulu_el_joint" #2018.5.7
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=30000,
+        default=40000,
         help='max steps initial 3000.'
 
     )

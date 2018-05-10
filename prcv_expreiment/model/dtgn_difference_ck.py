@@ -87,7 +87,7 @@ def variable_summaries(var, name, is_conv=False):
             tf.summary.image('image', tf.reshape(var[:, :, :, 0], [-1, 64, 64, 1]))
 
 
-def inference(landmarks, keep_prob, is_train):
+def inference(landmarks, keep_prob, is_train, batch_size_placeholder):
 
     with tf.variable_scope('block_top'):
         for i in range(CK_SIMPLE_NUM):
@@ -135,8 +135,8 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    10000,
-                                    0.1,  # 0.96  0.3
+                                    3000,
+                                    0.3,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

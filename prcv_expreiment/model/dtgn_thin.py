@@ -89,7 +89,7 @@ def variable_summaries(var, name, is_conv=False):
 
 def inference(landmarks, keep_prob, is_train):
     with tf.variable_scope('dtgn_fc1'):
-        weights = weight_variable([68*2*2, 100], stddev=0.1, name='weights', wd=0.01)
+        weights = weight_variable([68*2*3, 100], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([100], name='biases')
         fc_1 = tf.nn.relu(tf.matmul(landmarks, weights) + biases)
         variable_summaries(fc_1, 'fc1')

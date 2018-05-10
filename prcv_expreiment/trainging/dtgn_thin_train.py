@@ -11,7 +11,7 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-from prcv_expreiment.model import dtgn as model
+from prcv_expreiment.model import dtgn_thin as model
 # from model import images_difference as id_model
 # from model import single_frame as td_model
 
@@ -28,7 +28,7 @@ def placeholder_inputs():
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
     # images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.OULU_LANDMARKS_LENGTH])
+    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, 68*2*3])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
@@ -62,8 +62,10 @@ def read_and_decode(filename):
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     # landmark = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     landmark_plain = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [136])
+    landmark_mid = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM + 136 * 3], [136])
+    # landmark_mid2 = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM + 136 * 4], [136])
     landmark_peak = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM + 136 * 6], [136])
-    landmark = tf.concat([landmark_plain, landmark_peak], axis=-1)
+    landmark = tf.concat([landmark_plain, landmark_mid, landmark_peak], axis=-1)
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -81,8 +83,10 @@ def read_and_decode_4_test(filename):
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     landmark_plain = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [136])
+    landmark_mid = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM + 136 * 3], [136])
+    # landmark_mid2 = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM + 136 * 4], [136])
     landmark_peak = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM + 136*6], [136])
-    landmark = tf.concat([landmark_plain, landmark_peak], axis=-1)
+    landmark = tf.concat([landmark_plain, landmark_mid, landmark_peak], axis=-1)
     label = tf.cast(features['label'], tf.float32)
     return landmark, label
 
@@ -122,10 +126,10 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        # saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -191,8 +195,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
-            # saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtgn.ckpt")  # 将模型保存到save/model.ckpt文件
-            # print("Model saved in file:", saver_path)
+            saver_path = saver.save(sess, "/home/duheran/facial_expresssion/save/dtgn_thin/{}/{}.ckpt")  # 将模型保存到save/model.ckpt文件
+            print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
 
