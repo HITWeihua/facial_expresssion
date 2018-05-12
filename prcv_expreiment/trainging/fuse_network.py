@@ -92,7 +92,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # train_op = model.training(loss, flags.learning_rate, global_step, train_vars)
 
         # Add the Op to compare the logits to the labels during evaluation.
-        eval_correct = model.evaluation(fe_logits, labels_placeholder)
+        eval_correct = model.evaluation(dtan_logits, dtgn_logits , labels_placeholder)
 
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
@@ -103,8 +103,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
             sess.run(init)
-            saver.restore(sess, "/home/duheran/facial_expresssion/save/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
-            saver.restore(sess, "/home/duheran/facial_expresssion/save/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
+            saver.restore(sess, "/home/duheran/facial_expresssion/save/{}/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
+            saver.restore(sess, "/home/duheran/facial_expresssion/save/{}/dtgn/dtgn.ckpt")  # 即将固化到硬盘中的Session从保存路径再读取出来
 
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)

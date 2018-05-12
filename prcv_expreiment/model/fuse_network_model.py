@@ -247,11 +247,10 @@ def loss(logits, labels_placeholder, dtgn_features, dtgn_fc2):
     tf.summary.scalar('xentropy_mean', xentropy_mean)
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
-
 def training(total_loss, init_learning_rate, global_step, tra_vars):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    2000 ,
+                                    2000,
                                     0.3,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
