@@ -17,7 +17,7 @@ spliter = re.compile(r'[\(\)\,\n]+')
 # win = dlib.image_window()
 
 base_read_path = os.path.abspath('../oulu/Strong')
-base_write_path = os.path.abspath('../oulu/oulu_face_landmark_new')
+base_write_path = os.path.abspath('../oulu/oulu_face_landmark_rescale')
 # base_read_path = os.path.abspath('F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\cohn-kanade-images')
 # base_write_path = os.path.abspath('F:\\files\\facial_expresssion\\ck\\extended-cohn-kanade-images\\ck_image_landmark')
 person_list = [i for i in os.listdir(base_read_path) if '.DS' not in i]  # and int(i[1:])>138]
@@ -33,7 +33,7 @@ for person in person_list:
     for exp in expression_list:
         read_exp_path = os.path.join(read_path, exp)
         write_exp_path = os.path.join(write_path, exp)
-        files = [f for f in os.listdir(read_exp_path) if '.jpeg' in f]  # png for ck+ and jpeg for oulu
+        files = [f for f in os.listdir(read_exp_path) if '.jpeg' in f]
         if not os.path.isdir(write_exp_path):
             os.mkdir(write_exp_path)
         face_crop = []
@@ -45,6 +45,10 @@ for person in person_list:
             # The 1 in the second argument indicates that we should upsample the image
             # 1 time.  This will make everything bigger and allow us to detect more
             # faces.
+            print(img.shape)
+            # assert img.shape == (64, 64), "shape: {}".format(img.shape)
+
+            ld_img = np.zeros((img.shape[0], img.shape[1]),  dtype=np.uint8)
             dets = detector(img, 1)
             print("Number of faces detected: {}".format(len(dets)))
             if len(dets) != 1:
@@ -55,6 +59,12 @@ for person in person_list:
                 # generate 68 tuple landmarks
                 shape = predictor(img, d)
             # print(img.shape)
+                for i in range(shape.num_parts):
+                    coordinate = re.split(r'[\(\)\,\n]+', str(shape.part(i)))
+                    if int(coordinate[1])<320 and int(coordinate[1])>=0 and int(coordinate[2])<240 and int(coordinate[2])>=0:
+                        ld_img[int(coordinate[2]), int(coordinate[1])] = 255
+
+
 
                 if file_num == 0:
                     landmarks = []
@@ -64,7 +74,7 @@ for person in person_list:
                     landmarks = [(float(x[1]), float(x[2])) for x in landmarks]
                     landmarks = np.array(landmarks)
                     # print(list(str(shape.part(0))))
-                    top = int(max(np.min(landmarks[:, 1])-40, 0))
+                    top = int(max(np.min(landmarks[:, 1]) - 20, 0))
                     bottom = int(np.max(landmarks[:, 1]))
 
                     right = int(np.max(landmarks[:, 0]))
@@ -78,6 +88,7 @@ for person in person_list:
                     # gray
                     else:
                         img_crop = img[top:bottom, left:right]
+                    ld_img_crop = ld_img[top:bottom, left:right]
                     face_crop.append(top)
                     face_crop.append(bottom)
                     face_crop.append(left)
@@ -89,14 +100,14 @@ for person in person_list:
                     # gray
                     else:
                         img_crop = img[face_crop[0]:face_crop[1], face_crop[2]:face_crop[3]]
-
-                # resize the image to 64*64 and change color from rgb to gray
-                img_resized = resize(img_crop, (64, 64), mode='reflect')
+                    ld_img_crop = ld_img[face_crop[0]:face_crop[1], face_crop[2]:face_crop[3]]
+                        # resize the image to 64*64 and change color from rgb to gray
+                img_resized = rescale(img_crop, (64/img_crop.shape[0], 64/img_crop.shape[1]))
+                ld_img_rescale = rescale(ld_img_crop, (64/ld_img_crop.shape[0], 64/ld_img_crop.shape[1]))
                 if len(img_resized.shape) == 3:
                     img_gray = rgb2gray(img_resized)
                 else:
                     img_gray = img_resized
-
 
                 # generate 68 tuple landmarks
                 # shape = predictor(img_resized, d)
@@ -105,6 +116,7 @@ for person in person_list:
                         fi.write(str(shape.part(i)) + '\n')
                 num += 1
 
+                io.imsave(write_f_path.replace('.jpeg', 'p.jpeg'), ld_img_rescale)
                 io.imsave(write_f_path, img_gray)
 
 print(num)
