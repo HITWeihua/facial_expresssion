@@ -12,10 +12,10 @@ import tensorflow as tf
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
 
-# from prcv_expreiment.model import resnet_dtan_SE as model
-from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
-# from prcv_expreiment.model import resnet_dtan_SE_cross_channels_ck as model
-
+from prcv_expreiment.model import resnet_dtan_SE_feature_map_save as model
+# from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
+# from prcv_expreiment.model import resnet_dtan_SECC_combine as model
+# from prcv_expreiment.model import resnet_dtan_SE_input as model
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
@@ -60,7 +60,7 @@ def read_and_decode(filename):
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
-                                       })# 29624 25392
+                                       })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
@@ -104,7 +104,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits, conv1 = model.inference(images_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
         loss = model.loss(fe_logits, labels_placeholder)
@@ -116,7 +116,9 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # Add the Op to compare the logits to the labels during evaluation.
         eval_correct = model.evaluation(fe_logits, labels_placeholder)
 
+        # calculate softmax logits
         softmax_logits = tf.nn.softmax(fe_logits)
+
         # Build the summary Tensor based on the TF collection of Summaries.
         summary = tf.summary.merge_all()
 
@@ -124,10 +126,10 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        # saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -184,27 +186,20 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         last_train_correct.append(train_correct)
                         last_test_correct.append(test_correct)
                     if (step + 1) == flags.max_steps:
-                        # fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
-                        #            fe_logits_last_values)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/test_l.txt',
-                        #            l_test)
-                        last_test_softmax_logits = sess.run(softmax_logits, feed_dict=test_feed_dict)
-                        np.savetxt(
-                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_SE_CC_oulu/' + str(
-                                fold_num) + '/logit.txt',
-                            last_test_softmax_logits)
-                        # fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
-                        #            fe_logits_last_values)
-                        np.savetxt(
-                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_SE_CC_oulu/' + str(
-                                fold_num) + '/test_l.txt',
-                            l_test)
+                        # last_test_softmax_logits = sess.run(softmax_logits, feed_dict=test_feed_dict)
+                        conv1_logits = sess.run(conv1, feed_dict=test_feed_dict)
+                        for i in range(64):
+                            np.savetxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/output/conv2_{}.txt'.format(i),
+                                   conv1_logits[0, :, :, i])
+                        for i in range(7):
+                            np.savetxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/output/img_{}.txt'.format(i),
+                                       img_test[0, :, :, i])
                         print(last_train_correct)
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
+            saver_path = saver.save(sess,  "/home/duheran/facial_expresssion/save/dtan_resnet_SE/{}/{}.ckpt".format(fold_num, fold_num))  # 将模型保存到save/model.ckpt文件
+            print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
     return last_train_correct, last_test_correct
@@ -214,21 +209,23 @@ def main(_):
     base_path = "/home/duheran/facial_expresssion/oulu_el_joint"
     train_correct = []
     test_correct = []
-    for i in range(10):
-        test_train_dir = os.path.join(base_path, str(i))
-        test_train_files = os.listdir(test_train_dir)
-        for file_name in test_train_files:
-            if 'test' in file_name:
-                test_file = file_name
-            elif 'train' in file_name:
-                train_file = file_name
-        train_tfrecord_path = os.path.join(test_train_dir, train_file)
-        test_tfrecord_path = os.path.join(test_train_dir, test_file)
-        # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
-        test_batch_size = 48
-        train, test = run_training(i, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
-        train_correct.append(train)
-        test_correct.append(test)
+    # for i in range(10):
+
+    test_train_dir = os.path.join(base_path, str(0))
+    test_train_files = os.listdir(test_train_dir)
+    for file_name in test_train_files:
+        if 'test' in file_name:
+            test_file = file_name
+        elif 'train' in file_name:
+            train_file = file_name
+    train_tfrecord_path = os.path.join(test_train_dir, train_file)
+    test_tfrecord_path = os.path.join(test_train_dir, test_file)
+    # test_batch_size = int(os.path.splitext(test_tfrecord_path)[0][-2:])
+    test_batch_size = 48
+    train, test = run_training(0, train_tfrecord_path, test_tfrecord_path, train_batch_size=64, test_batch_size=test_batch_size)
+    train_correct.append(train)
+    test_correct.append(test)
+
     print(np.array(train_correct).shape)
     print(np.array(test_correct).shape)
     print(np.array(train_correct).mean(axis=1))
@@ -254,7 +251,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=3500,
+        default=3000, # 3000
         help='max steps initial 2500.'
 
     )

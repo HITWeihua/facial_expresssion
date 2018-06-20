@@ -173,7 +173,7 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    20000,
+                                    40000,
                                     0.1,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)

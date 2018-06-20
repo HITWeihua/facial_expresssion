@@ -188,8 +188,8 @@ def loss(logits, labels_placeholder):
 def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
-                                    3000,
-                                    0.3,  # 0.96  0.3
+                                    10000,
+                                    0.1,  # 0.96  0.3
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

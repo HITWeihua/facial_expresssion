@@ -207,7 +207,7 @@ def loss(logits, fp_logits, labels_placeholder, landmarks_placeholder):
     labels = tf.to_int64(labels_placeholder)
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
-    tf.add_to_collection('losses', squre_error_mean * 0.5 + xentropy_mean * 0.5)
+    tf.add_to_collection('losses', squre_error_mean * 0.1 + xentropy_mean * 0.9)
     # tf.summary.scalar('xentropy_mean', xentropy_mean)
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 

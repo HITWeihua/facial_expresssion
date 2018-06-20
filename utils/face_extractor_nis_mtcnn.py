@@ -13,8 +13,8 @@ spliter = re.compile(r'[\(\)\,\n]+')
 
 # base_read_path = os.path.abspath('F:\\files\\facial_expresssion\\oulu\\Strong\\P013\\Disgust')
 # base_write_path = os.path.abspath('../oulu/oulu_face_landmark')
-base_read_path = os.path.abspath('/home/duheran/OriginalImg/NI/Strong')
-base_write_path = os.path.abspath('/home/duheran/OriginalImg/NI/crop')
+base_read_path = os.path.abspath('/home/duheran/OriginalImg/NI/Weak')
+base_write_path = os.path.abspath('/home/duheran/OriginalImg/NI/weak_crop')
 person_numbers = os.listdir(base_read_path)
 # files = [f for f in os.listdir(base_read_path) if '.jpeg' in f]
 detector = MTCNN()

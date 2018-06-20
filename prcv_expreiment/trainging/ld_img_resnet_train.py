@@ -11,11 +11,11 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-
-# from prcv_expreiment.model import resnet_dtan_SE as model
-from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
-# from prcv_expreiment.model import resnet_dtan_SE_cross_channels_ck as model
-
+from prcv_expreiment.model import resnet_ld_img_v2 as model
+# from prcv_expreiment.model import resnet_dtan_v3 as model
+# from prcv_expreiment.model import image_sepreate as model #
+# from model import images_difference as id_model
+# from model import single_frame as td_model
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
@@ -29,8 +29,8 @@ def placeholder_inputs():
     # images_placeholders = []
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
-    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
+    images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, 7])
+    # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.OULU_LANDMARKS_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
@@ -59,14 +59,22 @@ def read_and_decode(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
-                                       })# 29624 25392
+                                           'img_landmarks_raw': tf.FixedLenFeature([57344], tf.float32),
+                                       })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    imagesface = tf.slice(images, [0, 0, 0], [model.IMAGE_SIZE, model.IMAGE_SIZE, 7])
+    # imagesface = tf.concat([tf.reshape(images_all[:, :, 1], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 3], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 5], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 7], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 9], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 11], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 13], [64, 64, 1])], axis=-1)
+    # landmark = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return imagesface, label
 
 
 def read_and_decode_4_test(filename):
@@ -78,14 +86,59 @@ def read_and_decode_4_test(filename):
     features = tf.parse_single_example(serialized_example,
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
-                                           'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
+                                           'img_landmarks_raw': tf.FixedLenFeature([57344], tf.float32),  # 24576+816=29624
                                        })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    imagesface = tf.slice(images, [0, 0, 0], [model.IMAGE_SIZE, model.IMAGE_SIZE, 7])
+    # imagesface = tf.concat([tf.reshape(images_all[:, :, 1], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 2], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 5], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 7], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 9], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 11], [64, 64, 1]),
+    #                         tf.reshape(images_all[:, :, 13], [64, 64, 1])], axis=-1)
+    # landmark = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return imagesface, label
+
+# def read_and_decode(filename):
+#     # 根据文件名生成一个队列
+#     filename_queue = tf.train.string_input_producer([filename], num_epochs=10000)
+#     reader = tf.TFRecordReader()
+#     _, serialized_example = reader.read(filename_queue)   # 返回文件名和文件
+#     print('read train data.')
+#     features = tf.parse_single_example(serialized_example,
+#                                        features={
+#                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
+#                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
+#                                        })
+#     img = tf.cast(features['img_landmarks_raw'], tf.float32)
+#     images = tf.slice(img, [0], [model.IMAGE_PIXELS*7])
+#     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, 7])
+#     # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+#     label = tf.cast(features['label'], tf.float32)
+#     return images, label
+#
+#
+# def read_and_decode_4_test(filename):
+#     # 根据文件名生成一个队列
+#     filename_queue = tf.train.string_input_producer([filename], num_epochs=10)
+#     reader = tf.TFRecordReader()
+#     _, serialized_example = reader.read(filename_queue)   # 返回文件名和文件
+#     print('read test data.')
+#     features = tf.parse_single_example(serialized_example,
+#                                        features={
+#                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
+#                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),  # 24576+816=29624
+#                                        })
+#     img = tf.cast(features['img_landmarks_raw'], tf.float32)
+#     images = tf.slice(img, [0], [model.IMAGE_PIXELS*7])
+#     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, 7])
+#     # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+#     label = tf.cast(features['label'], tf.float32)
+#     return images, label
 
 
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
@@ -127,7 +180,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.8)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -141,6 +194,9 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
             img_test, l_test = sess.run([images_batch_test, label_batch_test])
+            # for i in range(7):
+            #     np.savetxt('./summaries_new/test_imgs/' + str(fold_num) + '/test_'+str(i)+'.txt',img_test[0,:,:,i])
+
             test_feed_dict = fill_feed_dict(img_test, l_test, 1.0, False, images_placeholder, labels_placeholder, keep_prob, is_train)
             # Start the training loop.
             last_train_correct = []
@@ -151,6 +207,10 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                 # Fill a feed dictionary with the actual set of images and labels
                 # for this particular training step.
                 img, l = sess.run([images_batch, label_batch])
+                # for i in range(7):
+                #     np.savetxt('./summaries_new/test_imgs/' + str(fold_num) + '/train_' + str(i) + '.txt',
+                #                img[0, :, :, i])
+
                 feed_dict = fill_feed_dict(img, l, 0.5, True, images_placeholder, labels_placeholder, keep_prob, is_train)
 
                 # Run one step of the model.  The return values are the activations
@@ -191,15 +251,12 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         #            l_test)
                         last_test_softmax_logits = sess.run(softmax_logits, feed_dict=test_feed_dict)
                         np.savetxt(
-                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_SE_CC_oulu/' + str(
-                                fold_num) + '/logit.txt',
+                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/img/'
+                            + str(fold_num) + '/logit.txt',
                             last_test_softmax_logits)
-                        # fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
-                        #            fe_logits_last_values)
                         np.savetxt(
-                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_SE_CC_oulu/' + str(
-                                fold_num) + '/test_l.txt',
+                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/img/'
+                            + str(fold_num) + '/test_l.txt',
                             l_test)
                         print(last_train_correct)
                         print(last_test_correct)
@@ -211,7 +268,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/oulu_el_joint"
+    base_path = "/home/duheran/facial_expresssion/oulu_ld_image_joint"  #   oulu_el_joint"
     train_correct = []
     test_correct = []
     for i in range(10):
@@ -254,8 +311,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=3500,
-        help='max steps initial 2500.'
+        default=3000,
+        help='max steps initial 3000.'
 
     )
     flags, unparsed = parser.parse_known_args()

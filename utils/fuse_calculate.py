@@ -7,6 +7,7 @@ def add_number(a):
     for i in range(len(b)):
         for j in range(len(b[i])):
             a[i][b[i][j]] += j + 1
+            # a[i][b[i][j]] += 0.1*j
     # print(a)
     return a
 
@@ -27,13 +28,20 @@ if __name__ == '__main__':
     # a = np.arange(12)
     accuracy_array = []
     for fold_num in range(10):
-        oulu_label = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_SE/{}/test_l.txt'.format(fold_num))
-        oulu_dtan_logit = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_SE/{}/logit.txt'.format(fold_num))
+        # oulu_label = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_SECC_combine/{}/test_l.txt'.format(fold_num))
+        # oulu_dtan_logit = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_SECC_combine/{}/logit.txt'.format(fold_num))
         # oulu_dtgn_logit = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtgn_conv_diff/{}/logit.txt'.format(fold_num))
-        oulu_dtgn_logit = np.loadtxt('/home/duheran/oulu_logits/{}/logit.txt'.format(fold_num))
-        logit = fuse_logits(oulu_dtan_logit, oulu_dtgn_logit)
+        # oulu_dtgn_logit = np.loadtxt('/home/duheran/ck_logits/{}/logit.txt'.format(fold_num))
 
-        accuracy_array.append(evaluation(logit, oulu_label))
+        label = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/img/{}/test_l.txt'.format(fold_num))
+        logit1 = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/img/{}/logit.txt'.format(fold_num))
+        logit2 = np.loadtxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/ld_img/{}/logit.txt'.format(fold_num))
+
+
+
+        logit = fuse_logits(logit1, logit2)
+
+        accuracy_array.append(evaluation(logit, label))
     print(accuracy_array)
     print(np.mean(accuracy_array))
 

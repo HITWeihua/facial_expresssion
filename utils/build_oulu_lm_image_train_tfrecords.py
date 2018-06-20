@@ -63,21 +63,26 @@ if __name__ == '__main__':
         #     subject_list = f.readlines()
         # people_list = [x.strip() for x in subject_list if '.DS' not in x]
         people_list = [x for x in os.listdir(image_base_path) if str(tf_num) not in x[3]]
-        print(people_list)
 
+        people_list.sort()
+        print(people_list)
         for people in people_list:
             # landmarks_people_dir_path = os.path.join(landmarks_base_path, people)
             people_dir_path = os.path.join(image_base_path, people)
 
             # lable_path_people = os.path.join(lable_base_path, people)
             express_list = [x for x in os.listdir(people_dir_path) if '.DS' not in x]
-
+            express_list.sort()
             for num in range(len(express_list)):
                 # landmarks_names_path = os.path.join(landmarks_people_dir_path, expression)
                 image_names_path = os.path.join(people_dir_path, express_list[num])
                 # lable_path = os.path.join(lable_path_people, expression)
                 # landmark_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.txt' in x]
-                image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.jpeg' in x]
+                image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.jpeg' in x and 'p.jpeg' not in x]
+                ld_image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and 'p.jpeg' in x]
+                image_names.sort()
+                ld_image_names.sort()
+                image_names.extend(ld_image_names)
 
                 lable_value = float(num)
                 lable_vec = np.zeros((len(express_list)))

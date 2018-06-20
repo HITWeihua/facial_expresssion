@@ -116,6 +116,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # Add the Op to compare the logits to the labels during evaluation.
         eval_correct = model.evaluation(fe_logits, labels_placeholder)
 
+
+        softmax_logits = tf.nn.softmax(fe_logits)
         # Build the summary Tensor based on the TF collection of Summaries.
         summary = tf.summary.merge_all()
 
@@ -126,7 +128,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.45)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -188,6 +190,18 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         #            fe_logits_last_values)
                         # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/test_l.txt',
                         #            l_test)
+                        last_test_softmax_logits = sess.run(softmax_logits, feed_dict=test_feed_dict)
+                        np.savetxt(
+                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_ck/' + str(
+                                fold_num) + '/logit.txt',
+                            last_test_softmax_logits)
+                        # fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
+                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
+                        #            fe_logits_last_values)
+                        np.savetxt(
+                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_ck/' + str(
+                                fold_num) + '/test_l.txt',
+                            l_test)
                         print(last_train_correct)
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
@@ -198,7 +212,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/duheran/facial_expresssion/ck_el_joint_new"
+    base_path = "/home/duheran/facial_expresssion/ck_el_joint"
     train_correct = []
     test_correct = []
     for i in range(10):

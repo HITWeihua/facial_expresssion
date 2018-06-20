@@ -7,7 +7,7 @@ CK_SIMPLE_NUM = 6
 CK_LANDMARKS_LENGTH = 68*2*CK_SIMPLE_NUM
 
 OULU_NUM_CLASSES = 6
-OULU_SIMPLE_NUM = 7
+OULU_SIMPLE_NUM = 14
 OULU_LANDMARKS_LENGTH = 68*2*OULU_SIMPLE_NUM
 ACTIVATION = tf.nn.relu
 
@@ -78,11 +78,11 @@ def variable_summaries(var):
         tf.summary.histogram('histogram', var)
 
 
-def inference(images, landmarks, keep_prob, is_train):
+def inference(images, keep_prob, is_train):
     # conv1
-    images = images * 256
+    images = images / 256
     with tf.variable_scope('block1'):
-        kernel1 = weight_variable([5, 5, OULU_SIMPLE_NUM, 64], stddev=0.1, name='weights', wd=0.0)
+        kernel1 = weight_variable([5, 5, 7, 64], stddev=0.1, name='weights', wd=0.0)
         biases1 = bias_variable([64], name='biases')
         conv1 = conv2d(images, kernel1) + biases1
         conv1_bn = batch_norm(conv1, 64, is_train)
@@ -184,11 +184,11 @@ def inference(images, landmarks, keep_prob, is_train):
         fc_1_drop = tf.nn.dropout(fc_1, keep_prob)
 
     # fc2
-    with tf.variable_scope('fc2'):
-        weights = weight_variable([4 * 4 * 64, OULU_LANDMARKS_LENGTH], stddev=0.1, name='weights', wd=0.01)
-        biases = bias_variable([OULU_LANDMARKS_LENGTH], name='biases')
-        fp_logits = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
-        # variable_summaries(fc_2)
+    # with tf.variable_scope('fc2'):
+    #     weights = weight_variable([4 * 4 * 64, OULU_LANDMARKS_LENGTH], stddev=0.1, name='weights', wd=0.01)
+    #     biases = bias_variable([OULU_LANDMARKS_LENGTH], name='biases')
+    #     fp_logits = tf.nn.relu(tf.matmul(h_pool4_flat, weights) + biases)
+    #     # variable_summaries(fc_2)
         # fc2_drop = tf.nn.dropout(fc_2, keep_prob)
 
     # fc3 facial expression
@@ -197,17 +197,25 @@ def inference(images, landmarks, keep_prob, is_train):
         biases = bias_variable([OULU_NUM_CLASSES], name='biases')
         fe_logits = tf.matmul(fc_1_drop, weights) + biases
 
-    return fe_logits, fp_logits
+    return fe_logits#, fp_logits
 
+#
+# def loss(logits, fp_logits, labels_placeholder, landmarks_placeholder):
+#     squre_error_mean = tf.reduce_mean(tf.pow(fp_logits - landmarks_placeholder, 2))
+#     # squre_error_mean = tf.reduce_mean(squre_error, name='squre_error_mean')
+#
+#     labels = tf.to_int64(labels_placeholder)
+#     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
+#     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
+#     tf.add_to_collection('losses', squre_error_mean * 0.5 + xentropy_mean * 0.5)
+#     # tf.summary.scalar('xentropy_mean', xentropy_mean)
+#     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
-def loss(logits, fp_logits, labels_placeholder, landmarks_placeholder):
-    squre_error_mean = tf.reduce_mean(tf.pow(fp_logits - landmarks_placeholder, 2))
-    # squre_error_mean = tf.reduce_mean(squre_error, name='squre_error_mean')
-
+def loss(logits, labels_placeholder):
     labels = tf.to_int64(labels_placeholder)
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     xentropy_mean = tf.reduce_mean(cross_entropy, name='xentropy_mean')
-    tf.add_to_collection('losses', squre_error_mean * 0.5 + xentropy_mean * 0.5)
+    tf.add_to_collection('losses', xentropy_mean)
     # tf.summary.scalar('xentropy_mean', xentropy_mean)
     return tf.add_n(tf.get_collection('losses'), name='total_loss')
 

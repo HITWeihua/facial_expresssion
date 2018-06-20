@@ -5,6 +5,7 @@ from PIL import Image
 import time
 import re
 
+
 def write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0):
     express_array = np.zeros((64, 64, 14))
     index = 0
@@ -61,6 +62,7 @@ if __name__ == '__main__':
         # with open("./data_pairs/landmark/{}/test_subjects.txt".format(str(tf_num)), 'r') as f:
         #     subject_list = f.readlines()
         people_list = [x for x in os.listdir(image_base_path) if str(tf_num) in x[3]]
+        people_list.sort()
         print(people_list)
         for people in people_list:
             # landmarks_people_dir_path = os.path.join(landmarks_base_path, people)
@@ -68,13 +70,17 @@ if __name__ == '__main__':
 
             # lable_path_people = os.path.join(lable_base_path, people)
             express_list = [x for x in os.listdir(people_dir_path) if '.DS' not in x]
-
+            express_list.sort()
+            print(express_list)
             for num in range(len(express_list)):
                 # landmarks_names_path = os.path.join(emotion_people_dir_path, expression)
                 image_names_path = os.path.join(people_dir_path, express_list[num])
                 # lable_path = os.path.join(lable_path_people, express_list[num])
                 # landmark_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.txt' in x]
-                image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.jpeg' in x]
+                image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and '.jpeg' in x and 'p.jpeg' not in x]
+                ld_image_names = [x for x in os.listdir(image_names_path) if '.DS' not in x and 'p.jpeg' in x]
+                image_names.sort()
+                ld_image_names.sort()
 
                 lable_value = float(num)
                 lable_vec = np.zeros((len(express_list)))
@@ -86,6 +92,7 @@ if __name__ == '__main__':
                 # landmark_names = average_sampling(landmark_names)
                 # angles = [-15, -10, -5, 0, 5, 10, 15]
                 # for angle in angles:
+                image_names.extend(ld_image_names)
                 assert len(image_names) == 14, "files number not equal to 14. files: {}".format(image_names_path)
                 images_vec = write_2_image(lable_vec, image_names_path, image_names, is_flipped=False, angle=0)
                 concat_and_write2file(images_vec, lable_vec)

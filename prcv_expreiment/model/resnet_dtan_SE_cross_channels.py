@@ -95,11 +95,11 @@ def Squeeze_excitation_layer(input_x, input_dim, out_dim, ratio, layer_name):
 
 def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, layer_name):
     with tf.variable_scope(layer_name):
-        first_dim = int(input_dim*input_dim/4)
+        first_dim = int(input_dim*input_dim/16)
         second_dim = int(first_dim / ratio)
 
-        squeeze = tf.reduce_mean(input_x, reduction_indices=[3], keep_dims=True)
-        squeeze = tf.nn.max_pool(squeeze, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
+        # squeeze = tf.reduce_mean(input_x, reduction_indices=[3], keep_dims=True)
+        squeeze = tf.nn.max_pool(input_x, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding='VALID')
         squeeze = tf.reshape(squeeze, [-1, first_dim])
         weights = weight_variable([first_dim, second_dim], stddev=0.1, name='weights', wd=0.01)
         # biases = bias_variable([64], name='biases')
@@ -107,7 +107,7 @@ def Squeeze_excitation_layer_cross_channels(input_x, input_dim, out_dim, ratio, 
         weights2 = weight_variable([second_dim, first_dim], stddev=0.1, name='weights', wd=0.01)
         fc_2 = tf.nn.sigmoid(tf.matmul(fc_1, weights2))
 
-        excitation = tf.reshape(fc_2, [-1, int(input_dim/2), int(input_dim/2), 1])
+        excitation = tf.reshape(fc_2, [-1, int(input_dim/4), int(input_dim/4), 64])
         excitation = tf.image.resize_nearest_neighbor(excitation, (input_dim, input_dim))
         scale = input_x * excitation
         return scale
@@ -133,7 +133,7 @@ def inference(images, keep_prob, is_train):
         biases3 = bias_variable([64], name='biases')
         conv3 = conv2d(conv2_activation, kernel3) + biases3
 
-        se_layer1 = Squeeze_excitation_layer_cross_channels(conv3, 64, 64, 16, "se1")
+        se_layer1 = Squeeze_excitation_layer(conv3, 64, 64, 16, "se1")
         add_layer1 = tf.add(se_layer1, conv1_activation)
 
         add_layer1_bn = batch_norm(add_layer1, 64, is_train)
@@ -156,7 +156,7 @@ def inference(images, keep_prob, is_train):
         biases5 = bias_variable([64], name='biases')
         conv5 = conv2d(conv4_activation, kernel5) + biases5
 
-        se_layer2 = Squeeze_excitation_layer_cross_channels(conv5, 32, 64, 4, "se2")
+        se_layer2 = Squeeze_excitation_layer(conv5, 32, 64, 16, "se2")
         add_layer2 = tf.add(se_layer2, pool1)
 
         add_layer2_bn = batch_norm(add_layer2, 64, is_train)
@@ -178,7 +178,7 @@ def inference(images, keep_prob, is_train):
         biases7 = bias_variable([64], name='biases')
         conv7 = conv2d(conv6_activation, kernel7) + biases7
 
-        se_layer3 = Squeeze_excitation_layer_cross_channels(conv7, 16, 64, 1, "se3")
+        se_layer3 = Squeeze_excitation_layer(conv7, 16, 64, 16, "se3")
         add_layer3 = tf.add(se_layer3, pool2)
 
         add_layer3_bn = batch_norm(add_layer3, 64, is_train)
@@ -200,7 +200,7 @@ def inference(images, keep_prob, is_train):
         biases9 = bias_variable([64], name='biases')
         conv9 = conv2d(conv8_activation, kernel9) + biases9
 
-        se_layer4 = Squeeze_excitation_layer_cross_channels(conv8, 8, 64, 1, "se4")
+        se_layer4 = Squeeze_excitation_layer(conv8, 8, 64, 16, "se4")
         add_layer4 = tf.add(se_layer4, pool3)
 
         add_layer4_bn = batch_norm(add_layer4, 64, is_train)
@@ -251,7 +251,7 @@ def training(total_loss, init_learning_rate, global_step):
     lr = tf.train.exponential_decay(init_learning_rate,
                                     global_step,
                                     1000,
-                                    0.3,
+                                    0.1,
                                     staircase=True)
     tf.summary.scalar('learning_rate', lr)
     optimizer = tf.train.AdamOptimizer(lr)

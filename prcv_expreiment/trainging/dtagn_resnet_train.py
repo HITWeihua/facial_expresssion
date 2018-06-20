@@ -11,11 +11,11 @@ import tensorflow as tf
 # from model import temporal_difference_sw as td_model
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
-
-# from prcv_expreiment.model import resnet_dtan_SE as model
-from prcv_expreiment.model import resnet_dtan_SE_cross_channels as model
-# from prcv_expreiment.model import resnet_dtan_SE_cross_channels_ck as model
-
+from prcv_expreiment.model import resnet_dtagn_v2 as model
+# from prcv_expreiment.model import resnet_dtan_v3 as model
+# from prcv_expreiment.model import image_sepreate as model #
+# from model import images_difference as id_model
+# from model import single_frame as td_model
 
 GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
@@ -30,19 +30,20 @@ def placeholder_inputs():
     # for i in range(SIMPLE_NUM):
     #     images_placeholders.append(tf.placeholder(tf.float32, shape=[None, 64, 64, 1]))
     images_placeholder = tf.placeholder(tf.float32, shape=[None, 64, 64, model.OULU_SIMPLE_NUM])
-    # landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, LANDMARK_LENGTH])
+    landmarks_placeholder = tf.placeholder(tf.float32, shape=[None, model.OULU_LANDMARKS_LENGTH])
     labels_placeholder = tf.placeholder(tf.int32, shape=(None, model.OULU_NUM_CLASSES))
     keep_prob = tf.placeholder("float")
     is_train = tf.placeholder(tf.bool, name='phase_train')
-    return images_placeholder, labels_placeholder, keep_prob, is_train
+    return images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train
 
 
-def fill_feed_dict(img, l, keep, is_train_value, images_placeholder, labels_placeholder, keep_prob, is_train):
+def fill_feed_dict(img, lm, l, keep, is_train_value, images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train):
 
     images_feed = img
     label_feed = l
     feed_dict = {
         images_placeholder: images_feed,
+        landmarks_placeholder: lm,
         labels_placeholder: label_feed,
         keep_prob: keep,
         is_train: is_train_value
@@ -60,13 +61,13 @@ def read_and_decode(filename):
                                        features={
                                            'label': tf.FixedLenFeature([model.OULU_NUM_CLASSES], tf.float32),
                                            'img_landmarks_raw': tf.FixedLenFeature([29624], tf.float32),
-                                       })# 29624 25392
+                                       })
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    landmark = tf.slice(img, [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return images, landmark, label
 
 
 def read_and_decode_4_test(filename):
@@ -83,31 +84,31 @@ def read_and_decode_4_test(filename):
     img = tf.cast(features['img_landmarks_raw'], tf.float32)
     images = tf.slice(img, [0], [model.IMAGE_PIXELS*model.OULU_SIMPLE_NUM])
     images = tf.reshape(images, [model.IMAGE_SIZE, model.IMAGE_SIZE, model.OULU_SIMPLE_NUM])
-    # landmark = tf.slice(img, [dtan.IMAGE_PIXELS*dtan.SIMPLE_NUM], [LANDMARK_LENGTH])
+    landmark = tf.slice(img, [model.IMAGE_PIXELS * model.OULU_SIMPLE_NUM], [model.OULU_LANDMARKS_LENGTH])
     label = tf.cast(features['label'], tf.float32)
-    return images, label
+    return images, landmark, label
 
 
 def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_size=60, test_batch_size=30):
     with tf.Graph().as_default():
         # with tf.device('/gpu:'+GPU_NUM):
-        images, label = read_and_decode(train_tfrecord_path)
+        images, landmark, label = read_and_decode(train_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch, label_batch = tf.train.shuffle_batch([images, label], batch_size=train_batch_size, capacity=1000,
+        images_batch, landmark_batch, label_batch = tf.train.shuffle_batch([images, landmark, label], batch_size=train_batch_size, capacity=1000,
                                                         min_after_dequeue=800)
 
-        images_test, label_test = read_and_decode_4_test(test_tfrecord_path)
+        images_test, landmark_test, label_test = read_and_decode_4_test(test_tfrecord_path)
         # 使用shuffle_batch可以随机打乱输入
-        images_batch_test, label_batch_test = tf.train.batch([images_test, label_test], batch_size=test_batch_size, capacity=1000)
+        images_batch_test, landmark_batch_test, label_batch_test = tf.train.batch([images_test, landmark_test, label_test], batch_size=test_batch_size, capacity=1000)
 
         # Generate placeholders for the images and labels.
-        images_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
+        images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train = placeholder_inputs()
 
         # Build a Graph that computes predictions from the inference model.
-        fe_logits = model.inference(images_placeholder, keep_prob, is_train)
+        fe_logits, fp_logits = model.inference(images_placeholder, landmarks_placeholder, keep_prob, is_train)
 
         # Add to the Graph the Ops for loss calculation.
-        loss = model.loss(fe_logits, labels_placeholder)
+        loss = model.loss(fe_logits, fp_logits, labels_placeholder, landmarks_placeholder)
 
         # Add to the Graph the Ops that calculate and apply gradients.
         global_step = tf.Variable(0, trainable=False)
@@ -116,7 +117,6 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # Add the Op to compare the logits to the labels during evaluation.
         eval_correct = model.evaluation(fe_logits, labels_placeholder)
 
-        softmax_logits = tf.nn.softmax(fe_logits)
         # Build the summary Tensor based on the TF collection of Summaries.
         summary = tf.summary.merge_all()
 
@@ -127,7 +127,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.48)
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True, gpu_options= gpu_options)) as sess:
 
             # Instantiate a SummaryWriter to output summaries and the Graph.
@@ -140,8 +140,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
             sess.run(init)
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=coord)
-            img_test, l_test = sess.run([images_batch_test, label_batch_test])
-            test_feed_dict = fill_feed_dict(img_test, l_test, 1.0, False, images_placeholder, labels_placeholder, keep_prob, is_train)
+            img_test, lm_test, l_test = sess.run([images_batch_test, landmark_batch_test, label_batch_test])
+            test_feed_dict = fill_feed_dict(img_test, lm_test, l_test, 1.0, False, images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train)
             # Start the training loop.
             last_train_correct = []
             last_test_correct = []
@@ -150,8 +150,8 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
                 # Fill a feed dictionary with the actual set of images and labels
                 # for this particular training step.
-                img, l = sess.run([images_batch, label_batch])
-                feed_dict = fill_feed_dict(img, l, 0.5, True, images_placeholder, labels_placeholder, keep_prob, is_train)
+                img, lm, l = sess.run([images_batch, landmark_batch, label_batch])
+                feed_dict = fill_feed_dict(img, lm, l, 0.5, True, images_placeholder, landmarks_placeholder, labels_placeholder, keep_prob, is_train)
 
                 # Run one step of the model.  The return values are the activations
                 # from the `train_op` (which is discarded) and the `loss` Op.  To
@@ -189,18 +189,6 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         #            fe_logits_last_values)
                         # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/test_l.txt',
                         #            l_test)
-                        last_test_softmax_logits = sess.run(softmax_logits, feed_dict=test_feed_dict)
-                        np.savetxt(
-                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_SE_CC_oulu/' + str(
-                                fold_num) + '/logit.txt',
-                            last_test_softmax_logits)
-                        # fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
-                        #            fe_logits_last_values)
-                        np.savetxt(
-                            '/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_SE_CC_oulu/' + str(
-                                fold_num) + '/test_l.txt',
-                            l_test)
                         print(last_train_correct)
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
@@ -254,8 +242,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--max_steps',
         type=int,
-        default=3500,
-        help='max steps initial 2500.'
+        default=1500,
+        help='max steps initial 3000.'
 
     )
     flags, unparsed = parser.parse_known_args()

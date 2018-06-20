@@ -116,6 +116,9 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         # Add the Op to compare the logits to the labels during evaluation.
         eval_correct = model.evaluation(fe_logits, labels_placeholder)
 
+        # calculate softmax logits
+        softmax_logits = tf.nn.softmax(fe_logits)
+
         # Build the summary Tensor based on the TF collection of Summaries.
         summary = tf.summary.merge_all()
 
@@ -123,7 +126,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
         init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 
         # Create a saver for writing training checkpoints.
-        saver = tf.train.Saver()
+        # saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
@@ -183,17 +186,19 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
                         last_train_correct.append(train_correct)
                         last_test_correct.append(test_correct)
                     if (step + 1) == flags.max_steps:
-                        # fe_logits_last_values = sess.run(fe_logits, feed_dict=test_feed_dict)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/logit.txt',
-                        #            fe_logits_last_values)
-                        # np.savetxt('./summaries/summaries_graph_1219/' + str(fold_num) + '/test_l.txt',
-                        #            l_test)
+                        last_test_softmax_logits = sess.run(softmax_logits, feed_dict=test_feed_dict)
+                        np.savetxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/logits_output/dtan_resnet_SECC_combine/'
+                                   + str(fold_num) + '/logit.txt',
+                                   last_test_softmax_logits)
+                        np.savetxt('/home/duheran/facial_expresssion/prcv_expreiment/trainging/labels_output/dtan_resnet_SECC_combine/'
+                                   + str(fold_num) + '/test_l.txt',
+                                   l_test)
                         print(last_train_correct)
                         print(last_test_correct)
                         print(np.array(last_train_correct).mean())
                         print(np.array(last_test_correct).mean())
-            saver_path = saver.save(sess,  "/home/duheran/facial_expresssion/save/dtan_resnet_SE/{}/{}.ckpt".format(fold_num, fold_num))  # 将模型保存到save/model.ckpt文件
-            print("Model saved in file:", saver_path)
+            # saver_path = saver.save(sess,  "/home/duheran/facial_expresssion/save/dtan_resnet_SE/{}/{}.ckpt".format(fold_num, fold_num))  # 将模型保存到save/model.ckpt文件
+            # print("Model saved in file:", saver_path)
             coord.request_stop()
             coord.join(threads)
     return last_train_correct, last_test_correct

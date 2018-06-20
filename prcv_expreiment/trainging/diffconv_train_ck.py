@@ -12,7 +12,7 @@ import tensorflow as tf
 sys.path.append(os.path.abspath('.'))
 print(os.path.abspath('.'))
 
-GPU_NUM = "3"
+GPU_NUM = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_NUM
 
 IMAGE_SIZE = 64
@@ -137,7 +137,7 @@ def inference(images, keep_prob, is_train):
     with tf.variable_scope('fc1'):
         weights = weight_variable([2*68*16*5, 600], stddev=0.1, name='weights', wd=0.01)
         biases = bias_variable([600], name='biases')
-        h_pool = tf.reshape(inner_features_concat,[-1,32*2*68])
+        h_pool = tf.reshape(inner_features_concat,[-1,16*5*2*68])
         fc1 = tf.nn.relu(tf.matmul(h_pool, weights) + biases)
         #variable_summaries(fc1)
         fc1_drop = tf.nn.dropout(fc1, keep_prob)
@@ -356,7 +356,7 @@ def run_training(fold_num, train_tfrecord_path, test_tfrecord_path, train_batch_
 
 
 def main(_):
-    base_path = "/home/mingjing/face_project/ck_el_joint" #2018.5.6
+    base_path = "/home/duheran/facial_expresssion/ck_el_joint" #2018.5.6
     train_correct = []
     test_correct = []
     for i in range(10):
